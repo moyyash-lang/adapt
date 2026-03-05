@@ -3,8 +3,23 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>ADAPT — 適応エンジン</title>
+
+<!-- PWA -->
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0e12">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- iOS Safari PWA -->
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ADAPT">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+<link rel="apple-touch-startup-image" href="icon-512.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
@@ -118,19 +133,19 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 /* STEP3 - セット詳細 */
 .step3-group{margin-bottom:16px;}
 .step3-ex-hd{font-size:13px;font-weight:500;margin-bottom:8px;padding:6px 0;border-bottom:1px solid var(--line);}
-.step3-set-row{display:flex;align-items:center;gap:6px;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:5px;}
+.step3-set-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:5px;}
 .step3-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);width:18px;text-align:right;flex-shrink:0;}
 .step3-ctrl{display:flex;align-items:center;gap:4px;}
-.step3-adj{background:var(--bg4);border:1px solid var(--line);border-radius:5px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text);flex-shrink:0;line-height:1;}
+.step3-adj{background:var(--bg4);border:1px solid var(--line);border-radius:5px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text);flex-shrink:0;line-height:1;}
 .step3-adj:active{background:var(--bg3);}
-.step3-val{font-family:'DM Mono',monospace;font-size:15px;color:var(--bright);min-width:34px;text-align:center;}
+.step3-val{font-family:'DM Mono',monospace;font-size:15px;color:var(--bright);min-width:36px;text-align:center;}
 .step3-unit{font-size:9px;color:var(--dim);}
-.step3-x{font-size:11px;color:var(--muted);margin:0 2px;flex-shrink:0;}
-.step3-rir{display:flex;gap:3px;margin-left:auto;flex-shrink:0;}
-.step3-rir-btn{font-family:'DM Mono',monospace;font-size:10px;width:26px;height:24px;border:1px solid var(--line);border-radius:4px;background:var(--bg4);color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.step3-x{font-size:11px;color:var(--muted);margin:0 1px;flex-shrink:0;}
+.step3-rir{display:flex;gap:3px;width:100%;margin-top:2px;padding-left:24px;}
+.step3-rir-btn{font-family:'DM Mono',monospace;font-size:10px;flex:1;height:26px;border:1px solid var(--line);border-radius:4px;background:var(--bg4);color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;}
 .step3-rir-btn.active{background:var(--acc2);border-color:var(--acc2);color:#000;}
-.step3-rpe-ctrl{display:flex;align-items:center;gap:4px;margin-left:auto;flex-shrink:0;}
-.step3-rpe-val{font-family:'DM Mono',monospace;font-size:14px;color:var(--bright);min-width:28px;text-align:center;}
+.step3-rpe-ctrl{display:flex;align-items:center;gap:6px;width:100%;margin-top:2px;padding-left:24px;}
+.step3-rpe-val{font-family:'DM Mono',monospace;font-size:16px;color:var(--bright);min-width:36px;text-align:center;}
 /* FULL DRUM (edit) */
 .drum-row{display:flex;gap:10px;margin-bottom:14px;}
 .drum-wrap{flex:1;}
@@ -399,6 +414,8 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   </div>
   <div class="card">
     <div class="card-title">データ</div>
+    <div class="setting-row"><div><div class="setting-label">データをエクスポート</div><div class="setting-sub">JSONファイルとして保存</div></div><button onclick="exportData()" style="background:transparent;border:1px solid var(--acc2);border-radius:6px;padding:7px 14px;color:var(--acc2);cursor:pointer;font-size:12px;">書出</button></div>
+    <div class="setting-row"><div><div class="setting-label">データをインポート</div><div class="setting-sub">エクスポートしたJSONを読込</div></div><button onclick="document.getElementById('import-file').click()" style="background:transparent;border:1px solid var(--acc2);border-radius:6px;padding:7px 14px;color:var(--acc2);cursor:pointer;font-size:12px;">読込</button><input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)"></div>
     <div class="setting-row"><div><div class="setting-label">サンプルデータを読み込む</div><div class="setting-sub">全セッション・全セット</div></div><button onclick="importSample()" style="background:transparent;border:1px solid var(--acc);border-radius:6px;padding:7px 14px;color:var(--acc);cursor:pointer;font-size:12px;">読込</button></div>
     <div class="setting-row"><div class="setting-label">全データをリセット</div><button onclick="resetData()" style="background:transparent;border:1px solid var(--fat);border-radius:6px;padding:7px 14px;color:var(--fat);cursor:pointer;font-size:12px;">リセット</button></div>
     <div class="setting-row" style="border:none;"><div class="setting-label">記録セット数</div><div id="sess-count" style="font-family:'DM Mono',monospace;color:var(--acc2)">0</div></div>
@@ -624,6 +641,38 @@ function updateAutoLevelDisplay(){
   if(tF){tF.classList.toggle('on',isFemale);tF.classList.toggle('active',isFemale);}
 }
 function resetData(){if(!confirm('全データを削除しますか？'))return;sessions=[];saveStorage();recompute();toast('リセットしました');}
+
+function exportData(){
+  const payload={sessions,settings,exportedAt:new Date().toISOString(),version:'adapt-v4'};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`adapt-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('エクスポート完了 ✓');
+}
+
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.sessions||!Array.isArray(data.sessions))throw new Error('形式が違います');
+      if(!confirm(`${data.sessions.length}セットのデータを読み込みますか？\n現在のデータは上書きされます。`))return;
+      sessions=data.sessions;
+      if(data.settings)settings={...settings,...data.settings};
+      saveStorage();recompute();
+      toast(`${sessions.length}セット読み込み完了 ✓`);
+    }catch(err){
+      toast('読込失敗: '+err.message);
+    }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
 
 // ═══════════════ SAMPLE DATA ═══════════════
 function importSample(){
@@ -2414,6 +2463,16 @@ buildExPicker();
 setMode(mode);
 recompute();
 renderCalendar();
+</script>
+
+<!-- PWA Service Worker 登録 -->
+
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 </script>
 
 </body>
