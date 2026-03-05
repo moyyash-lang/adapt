@@ -1,0 +1,2493 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>ADAPT — Powerbuilder（中級）</title>
+
+<!-- PWA -->
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0d0e12">
+<meta name="mobile-web-app-capable" content="yes">
+
+<!-- iOS Safari PWA -->
+
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ADAPT">
+<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-192.png">
+<link rel="apple-touch-startup-image" href="icon-512.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080a0f;--bg2:#0e1118;--bg3:#151922;--bg4:#1c2130;
+  --line:#1f2535;--muted:#3a4260;--dim:#6b7494;
+  --text:#c4cae0;--bright:#eef0f8;
+  --acc:#5b8fff;--acc2:#3dd6a3;--warn:#f0845c;
+  --bench:#ff6b7a;--squat:#ffc94a;--dead:#4dc8e8;
+  --hp:#3dd6a3;--sp:#a78bfa;--fat:#f06b6b;
+  --r:8px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{min-height:100%;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 18px 12px;background:var(--bg2);border-bottom:1px solid var(--line);position:sticky;top:0;z-index:100;}
+.logo{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--bright);letter-spacing:3px;}
+.logo span{color:var(--acc);}
+.mode-toggle{display:flex;gap:4px;background:var(--bg3);border-radius:20px;padding:3px;}
+.mode-btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;padding:5px 12px;border-radius:16px;border:none;background:transparent;color:var(--dim);cursor:pointer;transition:all .2s;}
+.mode-btn.active{background:var(--acc);color:#fff;}
+.nav{display:flex;background:var(--bg2);border-bottom:1px solid var(--line);overflow-x:auto;}
+.nav::-webkit-scrollbar{display:none;}
+.nav-btn{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;padding:12px 18px;border:none;background:transparent;color:var(--muted);cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:color .15s;flex-shrink:0;}
+.nav-btn:hover{color:var(--text);}
+.nav-btn.active{color:var(--bright);border-bottom-color:var(--acc2);}
+.page{display:none;padding:16px;max-width:560px;margin:0 auto;}
+.page.active{display:block;}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;}
+.card-title{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;}
+/* TODAY */
+.status-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.stat-card{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:14px 12px;text-align:center;}
+.stat-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;line-height:1;}
+.stat-label{font-size:10px;color:var(--dim);margin-top:5px;letter-spacing:1px;}
+.stat-bar{height:3px;border-radius:2px;background:var(--bg4);margin-top:8px;overflow:hidden;}
+.stat-fill{height:100%;border-radius:2px;transition:width .6s ease;}
+.advice-box{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;margin-bottom:12px;border-left:3px solid var(--acc2);}
+.advice-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--acc2);margin-bottom:6px;}
+.advice-text{font-size:14px;color:var(--bright);line-height:1.5;}
+.advice-sub{font-size:11px;color:var(--dim);margin-top:4px;}
+.peak-row{display:flex;gap:8px;margin-bottom:12px;}
+.peak-card{flex:1;background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:12px;text-align:center;}
+.peak-date{font-family:'DM Mono',monospace;font-size:17px;font-weight:500;}
+.peak-name{font-size:9px;color:var(--dim);letter-spacing:1px;margin-top:3px;}
+.peak-val{font-size:11px;margin-top:4px;}
+.chart-wrap{height:200px;}
+/* CALENDAR */
+.cal-nav{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.cal-nav-btn{background:var(--bg3);border:1px solid var(--line);border-radius:6px;padding:8px 14px;color:var(--text);cursor:pointer;font-size:18px;}
+.cal-month{font-family:'DM Mono',monospace;font-size:15px;color:var(--bright);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px;}
+.cal-dow{text-align:center;font-family:'DM Mono',monospace;font-size:9px;color:var(--muted);padding:4px 0;letter-spacing:1px;}
+.cal-cell{aspect-ratio:1;border-radius:6px;background:var(--bg3);border:1px solid var(--line);display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;position:relative;transition:border-color .15s,background .15s;min-height:38px;}
+.cal-cell:hover:not(.cal-empty){border-color:var(--acc);}
+.cal-cell.cal-empty{background:transparent;border-color:transparent;cursor:default;}
+.cal-cell.cal-today{border-color:var(--acc2);}
+.cal-cell.cal-selected{background:#1a2240;border-color:var(--acc);}
+.cal-cell.cal-has-session::after{content:'';position:absolute;bottom:4px;width:5px;height:5px;border-radius:50%;background:var(--acc2);}
+.cal-cell.cal-high::after{background:var(--sp);}
+.cal-cell.cal-future{opacity:.4;cursor:default;}
+.cal-day{font-family:'DM Mono',monospace;font-size:13px;color:var(--text);}
+.cal-cell.cal-today .cal-day{color:var(--acc2);font-weight:700;}
+.cal-cell.cal-other .cal-day{color:var(--muted);}
+.cal-detail{background:var(--bg2);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:10px;}
+.cal-detail-header{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--line);background:var(--bg3);}
+.cal-detail-date{font-family:'DM Mono',monospace;font-size:13px;color:var(--bright);}
+.cal-detail-body{padding:14px 16px;}
+.cal-empty-msg{text-align:center;color:var(--muted);padding:20px 0;font-size:13px;}
+.cal-fss-bar{height:3px;border-radius:2px;background:var(--bg4);margin-top:6px;overflow:hidden;}
+.cal-fss-fill{height:100%;border-radius:2px;}
+/* LOG PANEL */
+.log-panel{display:none;margin-top:10px;background:var(--bg2);border-radius:var(--r);overflow:hidden;}
+.log-panel-hd{background:var(--bg3);padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);}
+.log-panel-title{font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;}
+.log-close-btn{background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;padding:2px 8px;line-height:1;}
+/* EXERCISE PICKER */
+.exercise-picker{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.ex-btn{background:var(--bg3);border:1px solid var(--line);border-radius:6px;padding:10px 12px;font-size:13px;color:var(--text);cursor:pointer;text-align:left;transition:border-color .15s,background .15s;}
+.ex-btn:hover{border-color:var(--acc);background:var(--bg4);}
+.ex-btn.selected{border-color:var(--acc2);background:#0d2820;color:var(--bright);}
+.ex-cat{font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:2px;}
+/* PROPOSAL CARD (STEP2) */
+.prop-card{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);margin-bottom:12px;overflow:hidden;}
+.prop-card-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 14px 8px;}
+.prop-ex-name{font-size:15px;font-weight:500;}
+.prop-goal-row{display:flex;gap:5px;padding:0 14px 10px;}
+.pgb{flex:1;padding:7px 2px;border:1px solid var(--line);border-radius:6px;background:var(--bg4);cursor:pointer;text-align:center;transition:all .15s;}
+.pgb:hover{border-color:var(--acc);}
+.pgb.active{border-color:var(--acc2);background:#0d2820;}
+.pgb-icon{font-size:14px;display:block;margin-bottom:1px;}
+.pgb-name{font-size:9px;color:var(--dim);display:block;}
+.pgb.active .pgb-name{color:var(--acc2);}
+/* COMPACT DRUM (in STEP2) */
+.cdrum-row{display:flex;gap:8px;padding:0 14px 10px;}
+.cdrum-wrap{flex:1;}
+.cdrum-label{font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:4px;text-align:center;}
+.cdrum-outer{position:relative;height:96px;overflow:hidden;background:var(--bg4);border:1px solid var(--line);border-radius:8px;cursor:grab;user-select:none;-webkit-user-select:none;}
+.cdrum-outer::before,.cdrum-outer::after{content:'';position:absolute;left:0;right:0;z-index:2;pointer-events:none;height:30px;}
+.cdrum-outer::before{top:0;background:linear-gradient(to bottom,var(--bg4) 0%,transparent 100%);}
+.cdrum-outer::after{bottom:0;background:linear-gradient(to top,var(--bg4) 0%,transparent 100%);}
+.cdrum-sel{position:absolute;left:4px;right:4px;top:50%;transform:translateY(-50%);height:30px;border:1px solid var(--acc);border-radius:5px;background:rgba(91,143,255,.08);pointer-events:none;z-index:3;}
+.cdrum-list{position:absolute;left:0;right:0;top:0;will-change:transform;}
+.cdrum-item{height:32px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:13px;color:var(--muted);transition:color .1s;}
+.cdrum-item.active{color:var(--bright);font-size:16px;}
+.cdrum-unit{position:absolute;right:6px;top:50%;transform:translateY(-50%);font-size:9px;color:var(--muted);z-index:4;pointer-events:none;font-family:'DM Mono',monospace;}
+.prop-metrics{display:flex;gap:8px;padding:0 14px 12px;}
+.prop-met{flex:1;text-align:center;background:var(--bg4);border-radius:5px;padding:6px 4px;}
+.prop-met-val{font-family:'DM Mono',monospace;font-size:13px;color:var(--bright);}
+.prop-met-label{font-size:8px;color:var(--dim);margin-top:2px;}
+/* STEP3 - セット詳細 */
+.step3-group{margin-bottom:16px;}
+.step3-ex-hd{font-size:13px;font-weight:500;margin-bottom:8px;padding:6px 0;border-bottom:1px solid var(--line);}
+.step3-set-row{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;background:var(--bg3);border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:5px;}
+.step3-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--dim);width:18px;text-align:right;flex-shrink:0;}
+.step3-ctrl{display:flex;align-items:center;gap:4px;}
+.step3-adj{background:var(--bg4);border:1px solid var(--line);border-radius:5px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;color:var(--text);flex-shrink:0;line-height:1;}
+.step3-adj:active{background:var(--bg3);}
+.step3-val{font-family:'DM Mono',monospace;font-size:15px;color:var(--bright);min-width:36px;text-align:center;}
+.step3-unit{font-size:9px;color:var(--dim);}
+.step3-x{font-size:11px;color:var(--muted);margin:0 1px;flex-shrink:0;}
+.step3-rir{display:flex;gap:3px;width:100%;margin-top:2px;padding-left:24px;}
+.step3-rir-btn{font-family:'DM Mono',monospace;font-size:10px;flex:1;height:26px;border:1px solid var(--line);border-radius:4px;background:var(--bg4);color:var(--dim);cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.step3-rir-btn.active{background:var(--acc2);border-color:var(--acc2);color:#000;}
+.step3-rpe-ctrl{display:flex;align-items:center;gap:6px;width:100%;margin-top:2px;padding-left:24px;}
+.step3-rpe-val{font-family:'DM Mono',monospace;font-size:16px;color:var(--bright);min-width:36px;text-align:center;}
+/* FULL DRUM (edit) */
+.drum-row{display:flex;gap:10px;margin-bottom:14px;}
+.drum-wrap{flex:1;}
+.drum-label{font-size:10px;color:var(--dim);letter-spacing:1px;margin-bottom:6px;}
+.drum-outer{position:relative;height:136px;overflow:hidden;background:var(--bg4);border:1px solid var(--line);border-radius:8px;cursor:grab;user-select:none;-webkit-user-select:none;}
+.drum-outer::before,.drum-outer::after{content:'';position:absolute;left:0;right:0;z-index:2;pointer-events:none;height:44px;}
+.drum-outer::before{top:0;background:linear-gradient(to bottom,var(--bg4) 0%,transparent 100%);}
+.drum-outer::after{bottom:0;background:linear-gradient(to top,var(--bg4) 0%,transparent 100%);}
+.drum-selector{position:absolute;left:6px;right:6px;top:50%;transform:translateY(-50%);height:40px;border:1px solid var(--acc);border-radius:6px;background:rgba(91,143,255,.08);pointer-events:none;z-index:3;}
+.drum-list{position:absolute;left:0;right:0;top:0;will-change:transform;}
+.drum-item{height:44px;display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:17px;color:var(--muted);transition:color .1s;}
+.drum-item.active{color:var(--bright);font-size:20px;}
+.drum-unit{position:absolute;right:10px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--muted);z-index:4;pointer-events:none;font-family:'DM Mono',monospace;}
+/* MISC */
+.sec-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;}
+.btn-primary{width:100%;padding:14px;background:var(--acc);border:none;border-radius:var(--r);color:#fff;font-family:'DM Mono',monospace;font-size:13px;letter-spacing:2px;cursor:pointer;transition:opacity .15s;}
+.btn-primary:active{opacity:.8;}
+.btn-green{background:var(--acc2)!important;color:#000!important;}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-bottom:1px solid var(--line);}
+.setting-row:last-child{border-bottom:none;}
+.setting-label{font-size:14px;color:var(--text);}
+.setting-sub{font-size:11px;color:var(--dim);margin-top:2px;}
+.toggle-wrap{display:flex;gap:4px;background:var(--bg3);border-radius:20px;padding:3px;}
+.toggle-opt{padding:5px 14px;border-radius:16px;border:none;background:transparent;color:var(--dim);cursor:pointer;font-size:12px;transition:all .2s;}
+.toggle-opt.on{background:var(--acc2);color:#000;}
+.set-input{width:80px;background:var(--bg4);border:1px solid var(--line);border-radius:6px;padding:8px;font-family:'DM Mono',monospace;text-align:right;font-size:14px;outline:none;color:var(--bright);}
+.hist-item{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:8px;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg4);border:1px solid var(--acc2);border-radius:20px;padding:10px 20px;font-size:12px;color:var(--acc2);font-family:'DM Mono',monospace;transition:transform .3s;z-index:999;white-space:nowrap;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">AD<span>A</span>PT</div>
+  <div class="mode-toggle">
+    <button class="mode-btn active" id="btn-beginner" onclick="setMode('beginner')">かんたん</button>
+    <button class="mode-btn" id="btn-advanced" onclick="setMode('advanced')">上級者</button>
+  </div>
+</div>
+<nav class="nav">
+  <button class="nav-btn active" onclick="showPage('today',this)">TODAY</button>
+  <button class="nav-btn" onclick="showPage('calendar',this)">CALENDAR</button>
+  <button class="nav-btn" onclick="showPage('predict',this)">PREDICT</button>
+  <button class="nav-btn" onclick="showPage('history',this)">HISTORY</button>
+  <button class="nav-btn" onclick="showPage('settings',this)">SETTINGS</button>
+</nav>
+
+<!-- TODAY -->
+
+<div class="page active" id="page-today">
+  <div style="margin-top:4px;margin-bottom:12px;font-size:12px;color:var(--dim);" id="today-date-label"></div>
+  <div class="status-grid">
+    <div class="stat-card"><div class="stat-val" id="s-hp" style="color:var(--hp)">—</div><div class="stat-label">HP LEVEL</div><div class="stat-bar"><div class="stat-fill" id="s-hp-bar" style="background:var(--hp);width:0%"></div></div></div>
+    <div class="stat-card"><div class="stat-val" id="s-sp" style="color:var(--sp)">—</div><div class="stat-label">SP LEVEL</div><div class="stat-bar"><div class="stat-fill" id="s-sp-bar" style="background:var(--sp);width:0%"></div></div></div>
+    <div class="stat-card"><div class="stat-val" id="s-fat" style="color:var(--fat)">—</div><div class="stat-label">疲労</div><div class="stat-bar"><div class="stat-fill" id="s-fat-bar" style="background:var(--fat);width:0%"></div></div></div>
+  </div>
+  <div class="advice-box"><div class="advice-label">TODAY'S ADVICE</div><div class="advice-text" id="advice-text">データがありません</div><div class="advice-sub" id="advice-sub">まずトレーニングを記録してください</div></div>
+  <button onclick="goToTodayLog()" style="width:100%;margin-bottom:14px;padding:14px;background:transparent;border:1.5px solid var(--acc2);border-radius:var(--r);color:var(--acc2);font-family:'DM Mono',monospace;font-size:13px;letter-spacing:2px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(61,214,163,0.08)'" onmouseout="this.style.background='transparent'">
+    ＋ 本日のトレーニングを記録
+  </button>
+  <div class="card-title" style="padding:0 0 8px;font-size:9px;letter-spacing:2px;color:var(--muted);font-family:'DM Mono',monospace;">PEAK PREDICTION</div>
+  <div class="peak-row">
+    <div class="peak-card"><div class="peak-date" id="peak-bench-date" style="color:var(--bench)">—</div><div class="peak-name">BENCH</div><div class="peak-val" id="peak-bench-val" style="color:var(--dim)">—</div></div>
+    <div class="peak-card"><div class="peak-date" id="peak-squat-date" style="color:var(--squat)">—</div><div class="peak-name">SQUAT</div><div class="peak-val" id="peak-squat-val" style="color:var(--dim)">—</div></div>
+    <div class="peak-card"><div class="peak-date" id="peak-dead-date" style="color:var(--dead)">—</div><div class="peak-name">DEAD</div><div class="peak-val" id="peak-dead-val" style="color:var(--dim)">—</div></div>
+  </div>
+  <div class="card"><div class="card-title">Δ1RM 推移（過去30日 + 予測14日）</div><div class="chart-wrap" style="height:220px;"><canvas id="c-today-delta"></canvas></div></div>
+  <div class="card"><div class="card-title">HP / SP / 疲労 トレンド</div><div class="chart-wrap" style="height:180px;"><canvas id="c-today-hsp"></canvas></div></div>
+</div>
+
+<!-- CALENDAR -->
+
+<div class="page" id="page-calendar">
+  <div class="cal-nav" style="margin-top:4px;">
+    <button class="cal-nav-btn" onclick="calPrev()">‹</button>
+    <div class="cal-month" id="cal-month-label"></div>
+    <button class="cal-nav-btn" onclick="calNext()">›</button>
+  </div>
+  <div class="cal-grid">
+    <div class="cal-dow">日</div><div class="cal-dow">月</div><div class="cal-dow">火</div>
+    <div class="cal-dow">水</div><div class="cal-dow">木</div><div class="cal-dow">金</div><div class="cal-dow">土</div>
+  </div>
+  <div class="cal-grid" id="cal-cells" style="margin-bottom:10px;"></div>
+  <div style="display:flex;gap:14px;margin-bottom:14px;flex-wrap:wrap;">
+    <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dim);"><div style="width:7px;height:7px;border-radius:50%;background:var(--acc2);"></div>記録あり</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dim);"><div style="width:7px;height:7px;border-radius:50%;background:var(--sp);"></div>高強度</div>
+    <div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--dim);"><div style="width:9px;height:9px;border-radius:3px;border:1.5px solid var(--acc2);"></div>今日</div>
+  </div>
+  <div class="cal-detail" id="cal-detail">
+    <div class="cal-detail-header">
+      <div>
+        <div class="cal-detail-date" id="cal-detail-date">日付を選択してください</div>
+        <div id="cal-detail-fss" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--acc2);margin-top:2px;"></div>
+      </div>
+      <div style="display:flex;gap:6px;">
+        <button id="btn-edit-day" onclick="openBulkEdit()"
+          style="display:none;background:transparent;border:1px solid var(--warn);border-radius:6px;padding:8px 12px;
+                 color:var(--warn);font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;">
+          ✏️ 編集
+        </button>
+        <button id="btn-open-log" onclick="openStep1()"
+          style="display:none;background:var(--acc);border:none;border-radius:6px;padding:8px 14px;
+                 color:#fff;font-family:'DM Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;">
+          ＋ 追加
+        </button>
+      </div>
+    </div>
+    <div class="cal-detail-body" id="cal-detail-body">
+      <div class="cal-empty-msg">日付をタップすると記録が表示されます</div>
+    </div>
+  </div>
+
+  <!-- STEP1: 種目選択 -->
+
+  <div class="log-panel" id="log-step1" style="border:1px solid var(--acc);">
+    <div class="log-panel-hd">
+      <div class="log-panel-title" id="step1-date" style="color:var(--acc);">種目を選ぶ</div>
+      <button class="log-close-btn" onclick="closeAll()">✕</button>
+    </div>
+    <div style="padding:16px;">
+      <div class="sec-label">種目を選ぶ（複数可）</div>
+      <div class="exercise-picker" id="ex-picker"></div>
+      <input id="ex-custom" placeholder="その他（種目名を入力）"
+        style="width:100%;margin-bottom:16px;background:var(--bg4);border:1px solid var(--line);
+               border-radius:6px;padding:10px 12px;color:var(--bright);font-size:13px;outline:none;">
+      <button class="btn-primary" onclick="goToStep2()">決定 →</button>
+    </div>
+  </div>
+
+  <!-- STEP2: 種目ごと目的＋ドラム -->
+
+  <div class="log-panel" id="log-step2" style="border:1px solid var(--acc2);">
+    <div class="log-panel-hd">
+      <div class="log-panel-title" id="step2-title" style="color:var(--acc2);">目的と重量を設定</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="backToStep1()" style="background:none;border:1px solid var(--line);border-radius:6px;color:var(--dim);font-size:11px;padding:5px 10px;cursor:pointer;">← 戻る</button>
+        <button class="log-close-btn" onclick="closeAll()">✕</button>
+      </div>
+    </div>
+    <div style="padding:16px;">
+      <!-- セッション負荷バー -->
+      <div style="margin-bottom:14px;">
+        <div id="session-budget-label" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--dim);margin-bottom:5px;letter-spacing:0.5px;">セッション負荷 —</div>
+        <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;">
+          <div id="session-budget-bar" style="height:100%;width:0%;background:var(--acc2);border-radius:3px;transition:width .3s,background .3s;"></div>
+        </div>
+        <div id="weekly-volume-panel" style="margin-top:10px;display:none;"></div>
+      </div>
+      <div id="ex-cards-list"></div>
+      <button class="btn-primary" onclick="goToStep3()" style="margin-top:4px;">セット詳細へ →</button>
+    </div>
+  </div>
+
+  <!-- STEP3: セットごとの詳細設定 -->
+
+  <div class="log-panel" id="log-step3" style="border:1px solid var(--sp);">
+    <div class="log-panel-hd">
+      <div class="log-panel-title" id="step3-title" style="color:var(--sp);">セット詳細</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="backToStep2()" style="background:none;border:1px solid var(--line);border-radius:6px;color:var(--dim);font-size:11px;padding:5px 10px;cursor:pointer;">← 戻る</button>
+        <button class="log-close-btn" onclick="closeAll()">✕</button>
+      </div>
+    </div>
+    <div style="padding:16px;">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:12px;">各セットの重量・回数・RIR（あと何回できるか）を調整してください</div>
+      <div id="step3-sets-list"></div>
+      <button class="btn-primary btn-green" onclick="saveSession()" style="margin-top:8px;">✓ 保存する</button>
+    </div>
+  </div>
+
+  <!-- 編集パネル (一括) -->
+
+  <div class="log-panel" id="log-bulk-edit" style="border:1px solid var(--warn);">
+    <div class="log-panel-hd">
+      <div class="log-panel-title" id="bulk-edit-title" style="color:var(--warn);">記録を編集</div>
+      <button class="log-close-btn" onclick="closeBulkEdit()">✕</button>
+    </div>
+    <div style="padding:16px;">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:12px;">重量・回数・RPEをセットごとに調整できます</div>
+      <div id="bulk-edit-sets-list"></div>
+      <button class="btn-primary btn-green" onclick="saveBulkEdit()" style="margin-top:8px;">✓ 変更を保存</button>
+    </div>
+  </div>
+
+  <!-- 編集パネル (単体) -->
+
+  <div class="log-panel" id="log-edit" style="border:1px solid var(--warn);">
+    <div class="log-panel-hd">
+      <div class="log-panel-title" id="edit-title" style="color:var(--warn);">セットを編集</div>
+      <button class="log-close-btn" onclick="closeEdit()">✕</button>
+    </div>
+    <div style="padding:16px;">
+      <div class="sec-label">重量 / 回数を変更</div>
+      <div class="drum-row">
+        <div class="drum-wrap">
+          <div class="drum-label">重量 (kg)</div>
+          <div class="drum-outer" id="drum-weight-edit"><div class="drum-selector"></div><div class="drum-unit">kg</div><div class="drum-list" id="drum-weight-edit-list"></div></div>
+        </div>
+        <div class="drum-wrap">
+          <div class="drum-label">回数</div>
+          <div class="drum-outer" id="drum-reps-edit"><div class="drum-selector"></div><div class="drum-unit">rep</div><div class="drum-list" id="drum-reps-edit-list"></div></div>
+        </div>
+      </div>
+      <input type="hidden" id="inp-weight-edit" value="60">
+      <input type="hidden" id="inp-reps-edit" value="5">
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button class="btn-primary" onclick="saveEdit()" style="flex:1;">✓ 更新</button>
+        <button onclick="deleteByUid(editingUid)" style="background:transparent;border:1px solid var(--fat);border-radius:var(--r);padding:12px 16px;color:var(--fat);cursor:pointer;font-size:12px;white-space:nowrap;">削除</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:12px;">
+    <div class="card-title">今月のサマリー</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+      <div style="text-align:center;"><div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--acc2);" id="sum-sessions">0</div><div style="font-size:10px;color:var(--dim);margin-top:3px;">セッション</div></div>
+      <div style="text-align:center;"><div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--sp);" id="sum-sets">0</div><div style="font-size:10px;color:var(--dim);margin-top:3px;">総セット数</div></div>
+      <div style="text-align:center;"><div style="font-family:'DM Mono',monospace;font-size:20px;color:var(--hp);" id="sum-fss">0</div><div style="font-size:10px;color:var(--dim);margin-top:3px;">総FSS</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PREDICT -->
+
+<div class="page" id="page-predict">
+  <div class="card" style="margin-top:4px;"><div class="card-title">Bench — 予測 1RM</div><div class="chart-wrap"><canvas id="c-pred-bench"></canvas></div></div>
+  <div class="card"><div class="card-title">Squat — 予測 1RM</div><div class="chart-wrap"><canvas id="c-pred-squat"></canvas></div></div>
+  <div class="card"><div class="card-title">Dead — 予測 1RM</div><div class="chart-wrap"><canvas id="c-pred-dead"></canvas></div></div>
+  <div class="card"><div class="card-title">HP / SP / 疲労 トレンド</div><div class="chart-wrap"><canvas id="c-hsp"></canvas></div></div>
+</div>
+
+<!-- HISTORY -->
+
+<div class="page" id="page-history">
+  <div id="history-list" style="margin-top:4px;"></div>
+  <div id="history-empty" class="card" style="text-align:center;color:var(--dim);padding:40px;">記録がありません</div>
+</div>
+
+<!-- SETTINGS -->
+
+<div class="page" id="page-settings">
+  <div class="card" style="margin-top:4px;">
+    <div class="card-title">プロフィール</div>
+    <div class="setting-row"><div class="setting-label">体重 (kg)</div><input id="set-bw" type="number" value="79.5" step="0.1" class="set-input" onchange="saveSetting('bw',this.value)"></div>
+    <div class="setting-row">
+      <div class="setting-label">性別</div>
+      <div class="toggle-wrap">
+        <button class="toggle-opt" id="tog-male" onclick="saveSetting('gender','male')">男性</button>
+        <button class="toggle-opt" id="tog-female" onclick="saveSetting('gender','female')">女性</button>
+      </div>
+    </div>
+    <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <div class="setting-label">トレーニングレベル <span style="color:var(--dim);font-weight:400;">（DOTS自動判定）</span></div>
+      <div id="auto-level-display" style="font-size:12px;color:var(--acc2);"></div>
+      <div style="font-size:11px;color:var(--dim);">DOTS &lt;300 → 初心者 ／ 300〜460 → 中級者 ／ 460〜 → 上級者（体重・性別正規化）</div>
+    </div>
+    <div class="setting-row"><div><div class="setting-label">入力モード</div><div class="setting-sub">かんたん=RIR / 上級者=RPE</div></div>
+      <div class="toggle-wrap"><button class="toggle-opt on" id="tog-beginner" onclick="setMode('beginner')">かんたん</button><button class="toggle-opt" id="tog-advanced" onclick="setMode('advanced')">上級者</button></div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-title">ベースライン 1RM</div>
+    <div class="setting-row"><div class="setting-label">Bench (kg)</div><input id="set-bench" type="number" value="72.5" step="0.5" class="set-input" style="color:var(--bench);" onchange="saveSetting('base_bench',this.value)"></div>
+    <div class="setting-row"><div class="setting-label">Squat (kg)</div><input id="set-squat" type="number" value="115.0" step="0.5" class="set-input" style="color:var(--squat);" onchange="saveSetting('base_squat',this.value)"></div>
+    <div class="setting-row"><div class="setting-label">Dead (kg)</div><input id="set-dead" type="number" value="140.0" step="0.5" class="set-input" style="color:var(--dead);" onchange="saveSetting('base_dead',this.value)"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">データ</div>
+    <div class="setting-row"><div><div class="setting-label">データをエクスポート</div><div class="setting-sub">JSONファイルとして保存</div></div><button onclick="exportData()" style="background:transparent;border:1px solid var(--acc2);border-radius:6px;padding:7px 14px;color:var(--acc2);cursor:pointer;font-size:12px;">書出</button></div>
+    <div class="setting-row"><div><div class="setting-label">データをインポート</div><div class="setting-sub">エクスポートしたJSONを読込</div></div><button onclick="document.getElementById('import-file').click()" style="background:transparent;border:1px solid var(--acc2);border-radius:6px;padding:7px 14px;color:var(--acc2);cursor:pointer;font-size:12px;">読込</button><input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(this)"></div>
+    <div class="setting-row"><div><div class="setting-label">サンプルデータを読み込む</div><div class="setting-sub">全セッション・全セット</div></div><button onclick="importSample()" style="background:transparent;border:1px solid var(--acc);border-radius:6px;padding:7px 14px;color:var(--acc);cursor:pointer;font-size:12px;">読込</button></div>
+    <div class="setting-row"><div class="setting-label">全データをリセット</div><button onclick="resetData()" style="background:transparent;border:1px solid var(--fat);border-radius:6px;padding:7px 14px;color:var(--fat);cursor:pointer;font-size:12px;">リセット</button></div>
+    <div class="setting-row" style="border:none;"><div class="setting-label">記録セット数</div><div id="sess-count" style="font-family:'DM Mono',monospace;color:var(--acc2)">0</div></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════ V3.1 ENGINE ═══════════════
+const TAU_HP=12,TAU_SP=4,TAU_FAT=3;
+const DF_HP=Math.exp(-1/TAU_HP),DF_SP=Math.exp(-1/TAU_SP),DF_FAT=Math.exp(-1/TAU_FAT);
+const PARTS=['Chest','Triceps','Lats','Posterior','Quads','Glutes','Neural'];
+const ADAPT_A={Chest:8,Triceps:3,Lats:5,Posterior:25,Quads:14,Glutes:8,Neural:4};
+const ADAPT_B={Chest:800,Triceps:400,Lats:700,Posterior:1200,Quads:1000,Glutes:700,Neural:400};
+const FAT_A={Chest:5,Triceps:2,Lats:3,Posterior:15,Quads:10,Glutes:5,Neural:3};
+const FAT_B={Chest:200,Triceps:100,Lats:200,Posterior:300,Quads:250,Glutes:200,Neural:150};
+const LIFT_SC={bench:0.79,squat:1.55,dead:1.67};
+const MAPPING={
+  // ── PUSH ──
+  'ベンチプレス':              {Chest:.55,Triceps:.25,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.20},
+  'インクラインベンチプレス':  {Chest:.50,Triceps:.20,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.30},
+  'デクラインベンチプレス':    {Chest:.60,Triceps:.20,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.20},
+  'ダンベルベンチプレス':      {Chest:.55,Triceps:.20,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.25},
+  'インクラインダンベルプレス':{Chest:.50,Triceps:.15,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.35},
+  'ショルダープレス':          {Chest:.15,Triceps:.20,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.65},
+  'ダンベルショルダープレス':  {Chest:.10,Triceps:.20,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.70},
+  'アーノルドプレス':          {Chest:.15,Triceps:.15,Lats:0,Posterior:.05,Quads:0,Glutes:0,Neural:.65},
+  'ディップス':                {Chest:.45,Triceps:.35,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.20},
+  'プッシュアップ':            {Chest:.50,Triceps:.30,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.20},
+  'ケーブルフライ':            {Chest:.75,Triceps:.05,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.20},
+  'ダンベルフライ':            {Chest:.75,Triceps:.05,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.20},
+  'ペックデック':              {Chest:.80,Triceps:0,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.20},
+  'ラテラルレイズ':            {Chest:.05,Triceps:0,Lats:0,Posterior:.10,Quads:0,Glutes:0,Neural:.85},
+  'フロントレイズ':            {Chest:.15,Triceps:0,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.85},
+  'トライセプスプレスダウン':  {Chest:0,Triceps:.85,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.15},
+  'スカルクラッシャー':        {Chest:.05,Triceps:.85,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.10},
+  'ライイングトライセプスエクステンション':{Chest:.05,Triceps:.85,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.10},
+  'ケーブルトライセプスプレスダウン':{Chest:0,Triceps:.85,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.15},
+  'オーバーヘッドトライセプスエクステンション':{Chest:0,Triceps:.90,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.10},
+
+  // ── PULL ──
+  'デッドリフト':              {Chest:0,Triceps:0,Lats:.15,Posterior:.50,Quads:.10,Glutes:.15,Neural:.10},
+  'スモウデッドリフト':        {Chest:0,Triceps:0,Lats:.10,Posterior:.35,Quads:.20,Glutes:.25,Neural:.10},
+  'ルーマニアンデッドリフト':  {Chest:0,Triceps:0,Lats:.05,Posterior:.60,Quads:.05,Glutes:.25,Neural:.05},
+  'ラットプルダウン':          {Chest:0,Triceps:0,Lats:.60,Posterior:.20,Quads:0,Glutes:0,Neural:.20},
+  'チンニング':                {Chest:0,Triceps:0,Lats:.60,Posterior:.20,Quads:0,Glutes:0,Neural:.20},
+  'ワイドグリップチンニング':  {Chest:0,Triceps:0,Lats:.65,Posterior:.15,Quads:0,Glutes:0,Neural:.20},
+  'ローイング':                {Chest:0,Triceps:0,Lats:.55,Posterior:.30,Quads:0,Glutes:0,Neural:.15},
+  'バーベルベントオーバーロー': {Chest:0,Triceps:0,Lats:.50,Posterior:.35,Quads:0,Glutes:0,Neural:.15},
+  'ダンベルローイング':        {Chest:0,Triceps:0,Lats:.55,Posterior:.30,Quads:0,Glutes:0,Neural:.15},
+  'ケーブルロー':              {Chest:0,Triceps:0,Lats:.55,Posterior:.30,Quads:0,Glutes:0,Neural:.15},
+  'シーテッドケーブルロー':    {Chest:0,Triceps:0,Lats:.50,Posterior:.35,Quads:0,Glutes:0,Neural:.15},
+  'フェイスプル':              {Chest:0,Triceps:0,Lats:.10,Posterior:.55,Quads:0,Glutes:0,Neural:.35},
+  'リアデルトフライ':          {Chest:0,Triceps:0,Lats:.10,Posterior:.60,Quads:0,Glutes:0,Neural:.30},
+  'プルオーバー':              {Chest:.30,Triceps:.10,Lats:.50,Posterior:0,Quads:0,Glutes:0,Neural:.10},
+  'シュラッグ':                {Chest:0,Triceps:0,Lats:0,Posterior:.30,Quads:0,Glutes:0,Neural:.70},
+  'ダンベルカール':            {Chest:0,Triceps:.10,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.90},
+  'バーベルカール':            {Chest:0,Triceps:.10,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:.90},
+  'ハンマーカール':            {Chest:0,Triceps:0,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:1.0},
+  'インクラインカール':        {Chest:0,Triceps:0,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:1.0},
+  'ケーブルカール':            {Chest:0,Triceps:0,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:1.0},
+  'プリーチャーカール':        {Chest:0,Triceps:0,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:1.0},
+  'コンセントレーションカール':{Chest:0,Triceps:0,Lats:0,Posterior:0,Quads:0,Glutes:0,Neural:1.0},
+
+  // ── LEGS ──
+  'スクワット':                {Chest:0,Triceps:0,Lats:0,Posterior:.20,Quads:.45,Glutes:.20,Neural:.15},
+  'フロントスクワット':        {Chest:0,Triceps:0,Lats:0,Posterior:.10,Quads:.55,Glutes:.20,Neural:.15},
+  'ハックスクワット':          {Chest:0,Triceps:0,Lats:0,Posterior:.10,Quads:.60,Glutes:.20,Neural:.10},
+  'ブルガリアンスプリットスクワット':{Chest:0,Triceps:0,Lats:0,Posterior:.20,Quads:.40,Glutes:.30,Neural:.10},
+  'レッグプレス':              {Chest:0,Triceps:0,Lats:0,Posterior:.15,Quads:.55,Glutes:.20,Neural:.10},
+  'レッグカール':              {Chest:0,Triceps:0,Lats:0,Posterior:.70,Quads:.05,Glutes:.15,Neural:.10},
+  'シーテッドレッグカール':    {Chest:0,Triceps:0,Lats:0,Posterior:.75,Quads:0,Glutes:.15,Neural:.10},
+  'レッグエクステンション':    {Chest:0,Triceps:0,Lats:0,Posterior:0,Quads:.90,Glutes:0,Neural:.10},
+  'ランジ':                    {Chest:0,Triceps:0,Lats:0,Posterior:.15,Quads:.45,Glutes:.30,Neural:.10},
+  'ウォーキングランジ':        {Chest:0,Triceps:0,Lats:0,Posterior:.15,Quads:.45,Glutes:.30,Neural:.10},
+  'ヒップスラスト':            {Chest:0,Triceps:0,Lats:0,Posterior:.10,Quads:.10,Glutes:.75,Neural:.05},
+  'グルートブリッジ':          {Chest:0,Triceps:0,Lats:0,Posterior:.15,Quads:.05,Glutes:.75,Neural:.05},
+  'カーフレイズ':              {Chest:0,Triceps:0,Lats:0,Posterior:.10,Quads:0,Glutes:0,Neural:.90},
+  'シーテッドカーフレイズ':    {Chest:0,Triceps:0,Lats:0,Posterior:.10,Quads:0,Glutes:0,Neural:.90},
+  'アダクション':              {Chest:0,Triceps:0,Lats:0,Posterior:0,Quads:.20,Glutes:.70,Neural:.10},
+  'アブダクション':            {Chest:0,Triceps:0,Lats:0,Posterior:0,Quads:0,Glutes:.90,Neural:.10},
+  'ノルディックカール':        {Chest:0,Triceps:0,Lats:0,Posterior:.85,Quads:0,Glutes:.10,Neural:.05},
+  'グッドモーニング':          {Chest:0,Triceps:0,Lats:0,Posterior:.65,Quads:.05,Glutes:.20,Neural:.10},
+
+  // ── CORE ──
+  'プランク':                  {Chest:.10,Triceps:.05,Lats:.10,Posterior:.20,Quads:.10,Glutes:.10,Neural:.35},
+  'クランチ':                  {Chest:.05,Triceps:0,Lats:0,Posterior:.05,Quads:.05,Glutes:0,Neural:.85},
+  'レッグレイズ':              {Chest:0,Triceps:0,Lats:0,Posterior:0,Quads:.20,Glutes:0,Neural:.80},
+  'アブローラー':              {Chest:.15,Triceps:.10,Lats:.20,Posterior:.10,Quads:.05,Glutes:0,Neural:.40},
+  'ケーブルクランチ':          {Chest:.05,Triceps:0,Lats:0,Posterior:.05,Quads:0,Glutes:0,Neural:.90},
+};
+const DEFAULT_MAP={Chest:.15,Triceps:.10,Lats:.15,Posterior:.15,Quads:.15,Glutes:.15,Neural:.15};
+const EX_LIST=Object.keys(MAPPING);
+const EX_CAT={
+  // PUSH
+  'ベンチプレス':'PUSH','インクラインベンチプレス':'PUSH','デクラインベンチプレス':'PUSH',
+  'ダンベルベンチプレス':'PUSH','インクラインダンベルプレス':'PUSH',
+  'ショルダープレス':'PUSH','ダンベルショルダープレス':'PUSH','アーノルドプレス':'PUSH',
+  'ディップス':'PUSH','プッシュアップ':'PUSH',
+  'ケーブルフライ':'PUSH','ダンベルフライ':'PUSH','ペックデック':'PUSH',
+  'ラテラルレイズ':'PUSH','フロントレイズ':'PUSH',
+  'トライセプスプレスダウン':'PUSH','スカルクラッシャー':'PUSH',
+  'ライイングトライセプスエクステンション':'PUSH',
+  'ケーブルトライセプスプレスダウン':'PUSH','オーバーヘッドトライセプスエクステンション':'PUSH',
+  // PULL
+  'デッドリフト':'PULL','スモウデッドリフト':'PULL','ルーマニアンデッドリフト':'PULL',
+  'ラットプルダウン':'PULL','チンニング':'PULL','ワイドグリップチンニング':'PULL',
+  'ローイング':'PULL','バーベルベントオーバーロー':'PULL','ダンベルローイング':'PULL',
+  'ケーブルロー':'PULL','シーテッドケーブルロー':'PULL',
+  'フェイスプル':'PULL','リアデルトフライ':'PULL','プルオーバー':'PULL','シュラッグ':'PULL',
+  'ダンベルカール':'PULL','バーベルカール':'PULL','ハンマーカール':'PULL',
+  'インクラインカール':'PULL','ケーブルカール':'PULL',
+  'プリーチャーカール':'PULL','コンセントレーションカール':'PULL',
+  // LEGS
+  'スクワット':'LEGS','フロントスクワット':'LEGS','ハックスクワット':'LEGS',
+  'ブルガリアンスプリットスクワット':'LEGS','レッグプレス':'LEGS',
+  'レッグカール':'LEGS','シーテッドレッグカール':'LEGS','レッグエクステンション':'LEGS',
+  'ランジ':'LEGS','ウォーキングランジ':'LEGS',
+  'ヒップスラスト':'LEGS','グルートブリッジ':'LEGS',
+  'カーフレイズ':'LEGS','シーテッドカーフレイズ':'LEGS',
+  'アダクション':'LEGS','アブダクション':'LEGS','ノルディックカール':'LEGS',
+  'グッドモーニング':'LEGS',
+  // CORE
+  'プランク':'CORE','クランチ':'CORE','レッグレイズ':'CORE',
+  'アブローラー':'CORE','ケーブルクランチ':'CORE',
+};
+
+function getMap(n){
+  if(MAPPING[n])return MAPPING[n];
+  for(const k of Object.keys(MAPPING))if(n.includes(k.slice(0,4)))return MAPPING[k];
+  return DEFAULT_MAP;
+}
+function recruit(I){return 1/(1+Math.exp(-12*(I-0.65)));}
+function hpFactor(I){return 1-I*I;}
+function spFactor(I){return I*I;}
+function saturate(x,A,B){return x>=0?A*x/(B+x):0;}
+function epley(w,r){return r>0?w*(1+r/30):w;}
+function effort(rpe){return Math.pow(rpe/10,2);}
+function mkUid(){return Math.random().toString(36).slice(2,10);}
+
+function computeTimeline(sessions){
+  const byDate={};
+  for(const s of sessions){
+    if(!byDate[s.date])byDate[s.date]={};
+    const M=getMap(s.exercise);
+    const rm1=s.rm1||epley(s.w,s.r);
+    const I=s.w/rm1,V=s.w*s.r,Rec=recruit(I),S=V*Rec;
+    const hp=S*hpFactor(I),sp=S*spFactor(I),fat=V*effort(s.rpe)*(1-I);
+    for(const p of PARTS){
+      const c=M[p]||0;
+      if(!byDate[s.date][p])byDate[s.date][p]={hp:0,sp:0,fat:0};
+      if(p==='Neural'){byDate[s.date][p].sp+=sp*c;byDate[s.date][p].fat+=fat*c;}
+      else{byDate[s.date][p].hp+=hp*c;byDate[s.date][p].sp+=sp*c;byDate[s.date][p].fat+=fat*c;}
+    }
+  }
+  const today=new Date();
+  const sorted=sessions.slice().sort((a,b)=>a.date<b.date?-1:1);
+  const start=sorted.length>0?new Date(sorted[0].date):new Date(today.getTime()-30*864e5);
+  const end=new Date(today.getTime()+14*864e5);
+  let d=new Date(start);
+  const F={};for(const p of PARTS)F[p]={hp:0,sp:0,fat:0};
+  const dates=[];
+  while(d<=end){
+    const ds=d.toISOString().slice(0,10);
+    const sess=byDate[ds];
+    for(const p of PARTS){
+      const hp_in=sess?sess[p]?.hp||0:0,sp_in=sess?sess[p]?.sp||0:0,fa_in=sess?sess[p]?.fat||0:0;
+      F[p].hp=F[p].hp*DF_HP+hp_in;F[p].sp=F[p].sp*DF_SP+sp_in;F[p].fat=F[p].fat*DF_FAT+fa_in;
+    }
+    const AD={},FS={};
+    for(const p of PARTS){AD[p]=saturate(F[p].hp+F[p].sp,ADAPT_A[p],ADAPT_B[p]);FS[p]=saturate(F[p].fat,FAT_A[p],FAT_B[p]);}
+    const fu=FS.Chest+FS.Triceps+FS.Lats,fl=FS.Quads+FS.Glutes,fp=FS.Posterior;
+    const db=(AD.Chest+.5*AD.Triceps+.4*AD.Neural-.7*fu)*LIFT_SC.bench;
+    const ds2=(AD.Quads+.6*AD.Glutes+.3*AD.Neural-.7*fl)*LIFT_SC.squat;
+    const dd=(AD.Posterior+.4*AD.Lats+.2*AD.Neural-.8*fp)*LIFT_SC.dead;
+    const totHP=Object.values(F).reduce((a,b)=>a+b.hp,0);
+    const totSP=Object.values(F).reduce((a,b)=>a+b.sp,0);
+    const totFat=Object.values(F).reduce((a,b)=>a+b.fat,0);
+    dates.push({date:ds,db:+db.toFixed(3),ds:+ds2.toFixed(3),dd:+dd.toFixed(3),hp:totHP,sp:totSP,fat:totFat,hasSession:!!sess,future:d>today});
+    d.setDate(d.getDate()+1);
+  }
+  return dates;
+}
+
+// ═══════════════ STATE ═══════════════
+let mode='beginner';
+let settings={bw:79.5,gender:'male',base_bench:72.5,base_squat:115.0,base_dead:140.0,level:'intermediate'};
+let sessions=[]; // {uid,date,exercise,w,r,rpe,rm1}
+let timeline=[],charts={};
+let selectedExercises=[];
+let exGoals={};    // {ex: goalKey}
+let exDrumMap={};  // {ex: {w:DrumInst,r:DrumInst,s:DrumInst}}
+let step3Sets=[];  // {uid,ex,w,r,rir,rpe}
+let step3Mode='new'; // 'new' | 'edit'
+let editingUid=null;
+let drumWeightEdit,drumRepsEdit;
+let calYear=new Date().getFullYear(),calMonth=new Date().getMonth(),calSelected=null;
+
+// ═══════════════ STORAGE ═══════════════
+function loadStorage(){
+  try{const s=localStorage.getItem('adapt4_s_powerbuilder');if(s)sessions=JSON.parse(s);}catch(e){}
+  try{const c=localStorage.getItem('adapt4_cfg_powerbuilder');if(c)settings={...settings,...JSON.parse(c)};}catch(e){}
+  try{const m=localStorage.getItem('adapt4_mode');if(m)mode=m;}catch(e){}
+}
+function saveStorage(){
+  try{localStorage.setItem('adapt4_s_powerbuilder',JSON.stringify(sessions));}catch(e){}
+  try{localStorage.setItem('adapt4_cfg_powerbuilder',JSON.stringify(settings));}catch(e){}
+  try{localStorage.setItem('adapt4_mode',mode);}catch(e){}
+}
+function saveSetting(k,v){settings[k]=parseFloat(v)||v;saveStorage();recompute();}
+function updateAutoLevelDisplay(){
+  const lv=getAutoLevel();
+  const dots=getDotsScore();
+  const total=(settings.base_bench+settings.base_squat+settings.base_dead).toFixed(0);
+  const labels={beginner:'🟢 初心者',intermediate:'🟡 中級者',advanced:'🔴 上級者'};
+  const el=document.getElementById('auto-level-display');
+  if(el) el.textContent=`DOTS ${dots}pt (BIG3 ${total}kg / BW ${settings.bw||75}kg) → ${labels[lv]}`;
+  // 性別トグル同期
+  const isFemale=(settings.gender||'male')==='female';
+  const tM=document.getElementById('tog-male'),tF=document.getElementById('tog-female');
+  if(tM){tM.classList.toggle('on',!isFemale);tM.classList.toggle('active',!isFemale);}
+  if(tF){tF.classList.toggle('on',isFemale);tF.classList.toggle('active',isFemale);}
+}
+function resetData(){if(!confirm('全データを削除しますか？'))return;sessions=[];saveStorage();recompute();toast('リセットしました');}
+
+function exportData(){
+  const payload={sessions,settings,exportedAt:new Date().toISOString(),version:'adapt-v4'};
+  const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=`adapt-backup-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('エクスポート完了 ✓');
+}
+
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.sessions||!Array.isArray(data.sessions))throw new Error('形式が違います');
+      if(!confirm(`${data.sessions.length}セットのデータを読み込みますか？\n現在のデータは上書きされます。`))return;
+      sessions=data.sessions;
+      if(data.settings)settings={...settings,...data.settings};
+      saveStorage();recompute();
+      toast(`${sessions.length}セット読み込み完了 ✓`);
+    }catch(err){
+      toast('読込失敗: '+err.message);
+    }
+  };
+  reader.readAsText(file);
+  input.value='';
+}
+
+// ═══════════════ SAMPLE DATA ═══════════════
+function importSample(){
+  if(sessions.length>0&&!confirm('既存データを上書きしますか？'))return;
+  const raw=[
+    // 2026-01-12
+    ['2026-01-12','ベンチプレス',40,6,6.5],['2026-01-12','ベンチプレス',50,3,7],['2026-01-12','ベンチプレス',55,5,8],['2026-01-12','ベンチプレス',55,5,8],['2026-01-12','ベンチプレス',55,7,9],
+    ['2026-01-12','スクワット',40,5,6.5],['2026-01-12','スクワット',60,3,7],['2026-01-12','スクワット',70,2,7.5],['2026-01-12','スクワット',80,5,8.5],['2026-01-12','スクワット',80,5,8.5],
+    ['2026-01-12','ラットプルダウン',45,12,8],['2026-01-12','ラットプルダウン',45,12,8],['2026-01-12','ラットプルダウン',45,12,8],
+    // 2026-01-17
+    ['2026-01-17','ラットプルダウン',45,12,8],['2026-01-17','ラットプルダウン',45,12,8],
+    ['2026-01-17','スクワット',40,5,6.5],['2026-01-17','スクワット',60,3,7],['2026-01-17','スクワット',70,2,7.5],['2026-01-17','スクワット',82.5,5,8.5],['2026-01-17','スクワット',82.5,5,8.5],
+    ['2026-01-17','デッドリフト',60,5,6.5],['2026-01-17','デッドリフト',80,3,7],['2026-01-17','デッドリフト',90,1,7.5],['2026-01-17','デッドリフト',90,3,8],['2026-01-17','デッドリフト',90,3,8],['2026-01-17','デッドリフト',100,1,9],
+    ['2026-01-17','ベンチプレス',40,6,6.5],['2026-01-17','ベンチプレス',50,6,7.5],['2026-01-17','ベンチプレス',50,6,7.5],['2026-01-17','ベンチプレス',50,7,8.5],
+    // 2026-01-18
+    ['2026-01-18','ベンチプレス',55,6,8],['2026-01-18','ベンチプレス',55,6,8],['2026-01-18','ベンチプレス',55,6,8],['2026-01-18','ベンチプレス',55,7,9],
+    // 2026-01-24
+    ['2026-01-24','スクワット',40,5,6.5],['2026-01-24','スクワット',60,3,7],['2026-01-24','スクワット',70,2,7.5],['2026-01-24','スクワット',82.5,5,8.5],['2026-01-24','スクワット',82.5,5,8.5],
+    ['2026-01-24','ベンチプレス',40,6,6.5],['2026-01-24','ベンチプレス',50,3,7],['2026-01-24','ベンチプレス',55,5,8],['2026-01-24','ベンチプレス',55,6,8],['2026-01-24','ベンチプレス',55,9,9],
+    ['2026-01-24','ラットプルダウン',45,12,8],['2026-01-24','ラットプルダウン',45,12,8],
+    // 2026-01-25
+    ['2026-01-25','ベンチプレス',40,6,6.5],['2026-01-25','ベンチプレス',50,3,7],['2026-01-25','ベンチプレス',55,6,8],['2026-01-25','ベンチプレス',55,7,8.5],['2026-01-25','ベンチプレス',55,7,8.5],['2026-01-25','ベンチプレス',55,7,8.5],
+    ['2026-01-25','スクワット',40,5,6.5],['2026-01-25','スクワット',60,3,7],['2026-01-25','スクワット',70,2,7.5],['2026-01-25','スクワット',75,6,8],['2026-01-25','スクワット',75,6,8],['2026-01-25','スクワット',75,8,9],
+    ['2026-01-25','ラットプルダウン',45,12,8],['2026-01-25','ラットプルダウン',45,12,8],
+    // 2026-01-31
+    ['2026-01-31','ベンチプレス',57.5,5,8],['2026-01-31','ベンチプレス',57.5,6,8.5],['2026-01-31','ベンチプレス',57.5,6,8.5],
+    ['2026-01-31','デッドリフト',90,3,7.5],['2026-01-31','デッドリフト',90,3,7.5],['2026-01-31','デッドリフト',95,5,8.5],['2026-01-31','デッドリフト',110,3,9],
+    ['2026-01-31','スクワット',82.5,5,8],['2026-01-31','スクワット',82.5,5,8],['2026-01-31','スクワット',82.5,8,9],
+    // 2026-02-01
+    ['2026-02-01','ベンチプレス',60,5,9],['2026-02-01','ベンチプレス',57.5,6,8.5],['2026-02-01','ベンチプレス',55,7,8],
+    ['2026-02-01','スクワット',70,6,7.5],['2026-02-01','スクワット',75,6,8],['2026-02-01','スクワット',82.5,4,8.5],
+    // 2026-02-07
+    ['2026-02-07','スクワット',60,5,6.5],['2026-02-07','スクワット',70,4,7],['2026-02-07','スクワット',80,4,7.5],['2026-02-07','スクワット',87.5,3,8],['2026-02-07','スクワット',92.5,5,9],['2026-02-07','スクワット',92.5,4,8.5],['2026-02-07','スクワット',80,3,7.5],
+    ['2026-02-07','デッドリフト',60,5,6.5],['2026-02-07','デッドリフト',90,3,7.5],['2026-02-07','デッドリフト',100,3,8],['2026-02-07','デッドリフト',100,3,8],['2026-02-07','デッドリフト',120,4,9],
+    ['2026-02-07','ベンチプレス',40,6,6.5],['2026-02-07','ベンチプレス',50,5,7],['2026-02-07','ベンチプレス',55,5,7.5],['2026-02-07','ベンチプレス',60,4,8.5],['2026-02-07','ベンチプレス',60,4,8.5],
+    // 2026-02-08
+    ['2026-02-08','ベンチプレス',40,6,6.5],['2026-02-08','ベンチプレス',50,5,7],['2026-02-08','ベンチプレス',55,5,7.5],['2026-02-08','ベンチプレス',60,5,8.5],['2026-02-08','ベンチプレス',60,6,9],
+    ['2026-02-08','スクワット',60,5,6.5],['2026-02-08','スクワット',70,4,7],['2026-02-08','スクワット',80,4,7.5],['2026-02-08','スクワット',85,4,8],['2026-02-08','スクワット',90,4,9],
+    // 2026-02-11
+    ['2026-02-11','ベンチプレス',40,6,6.5],['2026-02-11','ベンチプレス',50,5,7],['2026-02-11','ベンチプレス',60,5,8],['2026-02-11','ベンチプレス',60,5,8],['2026-02-11','ベンチプレス',60,6,9],
+    ['2026-02-11','インクラインベンチプレス',16,10,7],['2026-02-11','インクラインベンチプレス',20,8,8],['2026-02-11','インクラインベンチプレス',20,10,8.5],['2026-02-11','インクラインベンチプレス',22,7,9],
+    ['2026-02-11','ラットプルダウン',66,10,9],['2026-02-11','ラットプルダウン',66,7,8.5],['2026-02-11','ラットプルダウン',60,8,8],['2026-02-11','ラットプルダウン',66,5,8],
+    // 2026-02-14
+    ['2026-02-14','スクワット',60,5,6.5],['2026-02-14','スクワット',75,3,7],['2026-02-14','スクワット',85,1,7.5],['2026-02-14','スクワット',95,5,9],['2026-02-14','スクワット',90,5,8.5],['2026-02-14','スクワット',90,5,8.5],
+    ['2026-02-14','ベンチプレス',40,6,6.5],['2026-02-14','ベンチプレス',50,3,7],['2026-02-14','ベンチプレス',55,1,7.5],['2026-02-14','ベンチプレス',62.5,5,8.5],['2026-02-14','ベンチプレス',62.5,5,8.5],['2026-02-14','ベンチプレス',62.5,5,8.5],
+    ['2026-02-14','デッドリフト',60,5,6.5],['2026-02-14','デッドリフト',80,3,7],['2026-02-14','デッドリフト',100,1,7.5],['2026-02-14','デッドリフト',110,5,8.5],['2026-02-14','デッドリフト',110,5,8.5],['2026-02-14','デッドリフト',110,5,8.5],['2026-02-14','デッドリフト',100,6,8],
+    // 2026-02-15
+    ['2026-02-15','ラットプルダウン',60,8,9],['2026-02-15','ラットプルダウン',60,8,9],
+    ['2026-02-15','スクワット',60,5,6.5],['2026-02-15','スクワット',75,3,7],['2026-02-15','スクワット',85,1,7.5],['2026-02-15','スクワット',87.5,6,8.5],['2026-02-15','スクワット',87.5,6,8.5],['2026-02-15','スクワット',87.5,6,8.5],
+    ['2026-02-15','ベンチプレス',40,6,6.5],['2026-02-15','ベンチプレス',50,3,7],['2026-02-15','ベンチプレス',55,1,7.5],['2026-02-15','ベンチプレス',60,6,8.5],['2026-02-15','ベンチプレス',60,6,8.5],['2026-02-15','ベンチプレス',60,6,8.5],
+    ['2026-02-15','インクラインベンチプレス',22,8,9],['2026-02-15','インクラインベンチプレス',22,8,9],['2026-02-15','インクラインベンチプレス',22,7,8.5],
+    // 2026-02-21
+    ['2026-02-21','ベンチプレス',40,6,6.5],['2026-02-21','ベンチプレス',50,3,7],['2026-02-21','ベンチプレス',55,1,7.5],['2026-02-21','ベンチプレス',60,1,8],['2026-02-21','ベンチプレス',65,1,8.5],['2026-02-21','ベンチプレス',70,1,10],
+    ['2026-02-21','ベンチプレス',60,5,8],['2026-02-21','ベンチプレス',60,5,8],['2026-02-21','ベンチプレス',60,5,8],['2026-02-21','ベンチプレス',50,9,8],['2026-02-21','ベンチプレス',40,10,7.5],
+    ['2026-02-21','スクワット',60,5,6.5],['2026-02-21','スクワット',80,3,7.5],['2026-02-21','スクワット',85,5,8.5],['2026-02-21','スクワット',85,5,8.5],['2026-02-21','スクワット',85,5,8.5],
+    // 2026-02-22
+    ['2026-02-22','インクラインベンチプレス',20,8,9],['2026-02-22','インクラインベンチプレス',20,8,9],['2026-02-22','インクラインベンチプレス',20,8,9],
+    ['2026-02-22','ラットプルダウン',60,8,9],['2026-02-22','ラットプルダウン',60,8,9],['2026-02-22','ラットプルダウン',60,8,9],
+    ['2026-02-22','スクワット',60,5,6.5],['2026-02-22','スクワット',80,3,7.5],['2026-02-22','スクワット',85,5,8.5],['2026-02-22','スクワット',85,5,8.5],['2026-02-22','スクワット',85,5,8.5],
+    ['2026-02-22','ベンチプレス',40,6,6.5],['2026-02-22','ベンチプレス',50,3,7],['2026-02-22','ベンチプレス',55,4,7.5],['2026-02-22','ベンチプレス',60,3,8.5],['2026-02-22','ベンチプレス',55,5,8],['2026-02-22','ベンチプレス',50,6,7.5],
+    // 2026-02-23
+    ['2026-02-23','デッドリフト',60,5,6.5],['2026-02-23','デッドリフト',80,3,7],['2026-02-23','デッドリフト',100,5,8],['2026-02-23','デッドリフト',100,3,8],['2026-02-23','デッドリフト',120,3,8.5],['2026-02-23','デッドリフト',120,3,8.5],['2026-02-23','デッドリフト',125,3,9],['2026-02-23','デッドリフト',100,5,7.5],
+    ['2026-02-23','ベンチプレス',40,6,6.5],['2026-02-23','ベンチプレス',50,3,7],['2026-02-23','ベンチプレス',50,5,8],['2026-02-23','ベンチプレス',50,6,8.5],['2026-02-23','ベンチプレス',50,6,8.5],
+    ['2026-02-23','レッグプレス',126,10,8],['2026-02-23','レッグプレス',153,10,9],['2026-02-23','レッグプレス',135,10,8.5],
+    // 2026-02-28
+    ['2026-02-28','ベンチプレス',40,6,6.5],['2026-02-28','ベンチプレス',50,3,7],['2026-02-28','ベンチプレス',60,2,7.5],['2026-02-28','ベンチプレス',65,3,9],['2026-02-28','ベンチプレス',60,5,8.5],['2026-02-28','ベンチプレス',60,5,8.5],['2026-02-28','ベンチプレス',60,5,8.5],
+    ['2026-02-28','スクワット',60,5,6.5],['2026-02-28','スクワット',80,3,7.5],['2026-02-28','スクワット',90,3,8],['2026-02-28','スクワット',95,5,9],['2026-02-28','スクワット',95,5,9],
+    ['2026-02-28','レッグカール',39,12,7.5],['2026-02-28','レッグカール',45,10,8.5],['2026-02-28','レッグカール',45,10,8.5],
+    // 2026-03-01
+    ['2026-03-01','ローイング',45,10,8.5],['2026-03-01','ローイング',45,9,8],
+    ['2026-03-01','デッドリフト',60,5,6.5],['2026-03-01','デッドリフト',80,3,7],['2026-03-01','デッドリフト',100,2,7.5],['2026-03-01','デッドリフト',100,5,8.5],['2026-03-01','デッドリフト',100,5,8.5],['2026-03-01','デッドリフト',100,6,9],
+    ['2026-03-01','ベンチプレス',40,6,6.5],['2026-03-01','ベンチプレス',50,3,7],['2026-03-01','ベンチプレス',60,6,8.5],['2026-03-01','ベンチプレス',60,6,8.5],['2026-03-01','ベンチプレス',60,6,8.5],['2026-03-01','ベンチプレス',55,5,8],
+    ['2026-03-01','スクワット',60,5,6.5],['2026-03-01','スクワット',80,3,7.5],['2026-03-01','スクワット',90,5,8.5],['2026-03-01','スクワット',90,5,8.5],
+  ];
+  sessions=raw.map(([date,exercise,w,r,rpe])=>({uid:mkUid(),date,exercise,w,r,rpe,rm1:+epley(w,r).toFixed(2)}));
+  saveStorage();recompute();toast('サンプルデータを読み込みました（'+sessions.length+'セット）');
+}
+
+// ═══════════════ COMPUTE ═══════════════
+function recompute(){
+  timeline=computeTimeline(sessions);
+  updateToday();updateSettings();
+  if(document.getElementById('page-calendar').classList.contains('active'))renderCalendar();
+}
+function updateToday(){
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('today-date-label').textContent=today+' — あなたの適応状態';
+  const row=timeline.find(r=>r.date===today)||timeline[timeline.length-1];
+  if(!row)return;
+  const BASE={bench:settings.base_bench,squat:settings.base_squat,dead:settings.base_dead};
+  document.getElementById('s-hp').textContent=row.hp.toFixed(0);
+  document.getElementById('s-sp').textContent=row.sp.toFixed(0);
+  document.getElementById('s-fat').textContent=row.fat.toFixed(0);
+  document.getElementById('s-hp-bar').style.width=Math.min(100,row.hp/20*100)+'%';
+  document.getElementById('s-sp-bar').style.width=Math.min(100,row.sp/15*100)+'%';
+  document.getElementById('s-fat-bar').style.width=Math.min(100,row.fat/10*100)+'%';
+  const fr=row.fat/(row.hp+row.sp+.01);
+  let adv,sub;
+  if(fr>.6){adv='今日は休養日推奨';sub='疲労が高め。軽めの有酸素か完全休養を。';}
+  else if(row.sp<row.hp*.3){adv='中強度でボリュームを稼ぐ日';sub='HP優位。8〜12rep帯で追い込む。';}
+  else{adv='トレーニング日和です';sub='HP・SP ともにバランス良好。目的に合った強度で。';}
+  document.getElementById('advice-text').textContent=adv;
+  document.getElementById('advice-sub').textContent=sub;
+  const future=timeline.filter(r=>r.future||r.date===today);
+  if(!future.length)return;
+  const pb=future.reduce((a,b)=>b.db>a.db?b:a,future[0]);
+  const ps=future.reduce((a,b)=>b.ds>a.ds?b:a,future[0]);
+  const pd=future.reduce((a,b)=>b.dd>a.dd?b:a,future[0]);
+  const fmt=d=>d.slice(5).replace('-','/');
+  document.getElementById('peak-bench-date').textContent=fmt(pb.date);
+  document.getElementById('peak-bench-val').textContent=(BASE.bench+pb.db).toFixed(1)+'kg';
+  document.getElementById('peak-squat-date').textContent=fmt(ps.date);
+  document.getElementById('peak-squat-val').textContent=(BASE.squat+ps.ds).toFixed(1)+'kg';
+  document.getElementById('peak-dead-date').textContent=fmt(pd.date);
+  document.getElementById('peak-dead-val').textContent=(BASE.dead+pd.dd).toFixed(1)+'kg';
+  // store globally for chart plugin
+  window._peakDates={bench:pb.date.slice(5),squat:ps.date.slice(5),dead:pd.date.slice(5)};
+  renderDeltaChart();
+  renderHspTodayChart();
+}
+function renderDeltaChart(){
+  const BASE={bench:settings.base_bench,squat:settings.base_squat,dead:settings.base_dead};
+  const gc='rgba(255,255,255,0.04)',labels=timeline.map(r=>r.date.slice(5));
+  const si=timeline.findIndex(r=>r.future);
+  function seg(col){return{borderColor:ctx=>ctx.p1DataIndex>=si&&si>=0?col+'55':col,borderDash:ctx=>ctx.p1DataIndex>=si&&si>=0?[4,3]:[]};}
+  // max dot datasets
+  function maxDots(data,col){
+    const mx=Math.max(...data);const pts=data.map(v=>v===mx?v:null);
+    return{data:pts,borderColor:col,backgroundColor:col,pointRadius:pts.map(v=>v!=null?5:0),pointHoverRadius:7,borderWidth:0,showLine:false,fill:false,label:''};
+  }
+  const bData=timeline.map(r=>+(BASE.bench+r.db).toFixed(2));
+  const sData=timeline.map(r=>+(BASE.squat+r.ds).toFixed(2));
+  const dData=timeline.map(r=>+(BASE.dead+r.dd).toFixed(2));
+  if(charts.td)charts.td.destroy();
+  charts.td=new Chart(document.getElementById('c-today-delta'),{type:'line',data:{labels,datasets:[
+    {label:'Bench',data:bData,borderColor:'#ff6b7a',borderWidth:1.5,pointRadius:0,tension:.3,fill:false,segment:seg('#ff6b7a')},
+    {label:'Squat',data:sData,borderColor:'#ffc94a',borderWidth:1.5,pointRadius:0,tension:.3,fill:false,segment:seg('#ffc94a')},
+    {label:'Dead', data:dData,borderColor:'#4dc8e8',borderWidth:1.5,pointRadius:0,tension:.3,fill:false,segment:seg('#4dc8e8')},
+    maxDots(bData,'#ff6b7a'),maxDots(sData,'#ffc94a'),maxDots(dData,'#4dc8e8'),
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:true,position:'top',labels:{boxWidth:8,padding:10,font:{size:9},color:'#6b7494',
+        filter:item=>item.text!==''}},
+      tooltip:{backgroundColor:'#0e1118',borderColor:'#1f2535',borderWidth:1,mode:'index',
+        callbacks:{title:c=>c[0].label+(timeline[c[0].dataIndex]?.future?' [予測]':''),
+          label:c=>c.dataset.label?`${c.dataset.label}: ${c.parsed.y.toFixed(1)}kg`:null,
+          filter:item=>!!item.dataset.label}},
+    },
+    scales:{x:{grid:{color:gc},ticks:{color:'#3a4260',maxRotation:45,font:{size:8},callback:(v,i)=>{const d=labels[i];return d&&i%7===0?d:''}}},
+            y:{grid:{color:gc},ticks:{color:'#3a4260',callback:v=>v+'kg'}}}}});
+}
+function renderPredictCharts(){
+  if(!timeline.length)return;
+  const BASE={bench:settings.base_bench,squat:settings.base_squat,dead:settings.base_dead};
+  const gc='rgba(255,255,255,0.04)',labels=timeline.map(r=>r.date.slice(5));
+  const si=timeline.findIndex(r=>r.future);
+  function seg(col){return{borderColor:ctx=>ctx.p1DataIndex>=si&&si>=0?col+'55':col,borderDash:ctx=>ctx.p1DataIndex>=si&&si>=0?[4,3]:[]};}
+  function maxDots(data,col){
+    const mx=Math.max(...data);const pts=data.map(v=>v===mx?v:null);
+    return{data:pts,borderColor:col,backgroundColor:col,pointRadius:pts.map(v=>v!=null?5:0),pointHoverRadius:7,borderWidth:0,showLine:false,fill:false,label:''};
+  }
+  function mc(id,key,col,base){
+    if(charts[id])charts[id].destroy();
+    const data=timeline.map(r=>+(base+r[key]).toFixed(2));
+    charts[id]=new Chart(document.getElementById(id),{type:'line',data:{labels,datasets:[
+      {label:'予測1RM',data,borderColor:col,borderWidth:2,pointRadius:0,tension:.3,fill:false,segment:seg(col)},
+      maxDots(data,col),
+    ]},options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:'#0e1118',borderColor:'#1f2535',borderWidth:1,
+          callbacks:{title:c=>c[0].label+(timeline[c[0].dataIndex]?.future?' [予測]':''),
+            label:c=>c.dataset.label?`${c.parsed.y.toFixed(1)}kg`:null,
+            filter:item=>!!item.dataset.label}}},
+      scales:{x:{grid:{color:gc},ticks:{color:'#3a4260',maxRotation:45,font:{size:8},callback:(v,i)=>{const d=labels[i];return d&&i%7===0?d:''}}},
+              y:{grid:{color:gc},ticks:{color:'#3a4260',callback:v=>v+'kg'}}}}});
+  }
+  mc('c-pred-bench','db','#ff6b7a',BASE.bench);mc('c-pred-squat','ds','#ffc94a',BASE.squat);mc('c-pred-dead','dd','#4dc8e8',BASE.dead);
+  if(charts.hsp)charts.hsp.destroy();
+  const hpData=timeline.map(r=>+r.hp.toFixed(1));
+  const spData=timeline.map(r=>+r.sp.toFixed(1));
+  const fatData=timeline.map(r=>+r.fat.toFixed(1));
+  charts.hsp=new Chart(document.getElementById('c-hsp'),{type:'line',data:{labels,datasets:[
+    {label:'HP適応',data:hpData,borderColor:'#3dd6a3',borderWidth:1.5,pointRadius:0,tension:.3,fill:false,segment:seg('#3dd6a3')},
+    {label:'SP適応',data:spData,borderColor:'#a78bfa',borderWidth:1.5,pointRadius:0,tension:.3,fill:false,segment:seg('#a78bfa')},
+    {label:'疲労',  data:fatData,borderColor:'#f06b6b',borderWidth:1.5,pointRadius:0,tension:.3,fill:false,segment:seg('#f06b6b')},
+    maxDots(hpData,'#3dd6a3'),maxDots(spData,'#a78bfa'),maxDots(fatData,'#f06b6b'),
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:true,position:'top',labels:{boxWidth:8,padding:10,font:{size:9},color:'#6b7494',filter:item=>item.text!==''}},
+      tooltip:{backgroundColor:'#0e1118',borderColor:'#1f2535',borderWidth:1,mode:'index',
+        callbacks:{title:c=>c[0].label+(timeline[c[0].dataIndex]?.future?' [予測]':''),
+          label:c=>c.dataset.label?`${c.dataset.label}: ${c.parsed.y.toFixed(1)}`:null,
+          filter:item=>!!item.dataset.label}},
+    },
+    scales:{x:{grid:{color:gc},ticks:{color:'#3a4260',maxRotation:45,font:{size:8},callback:(v,i)=>{const d=labels[i];return d&&i%7===0?d:''}}},
+            y:{grid:{color:gc},ticks:{color:'#3a4260'}}}}});
+}
+function renderHistory(){
+  const el=document.getElementById('history-list'),empty=document.getElementById('history-empty');
+  el.innerHTML='';
+  if(!sessions.length){empty.style.display='block';return;}
+  empty.style.display='none';
+  const byDate={};
+  for(const s of sessions){if(!byDate[s.date])byDate[s.date]=[];byDate[s.date].push(s);}
+  Object.keys(byDate).sort((a,b)=>b.localeCompare(a)).forEach(date=>{
+    const exMap={};
+    for(const s of byDate[date]){if(!exMap[s.exercise])exMap[s.exercise]=[];exMap[s.exercise].push(s);}
+    const div=document.createElement('div');div.className='hist-item';
+    let html=`<div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--dim);margin-bottom:8px;">${date}</div>`;
+    for(const[ex,ss]of Object.entries(exMap)){
+      const col=exColor(ex);
+      html+=`<div style="margin-bottom:6px;"><div style="font-size:13px;color:${col};">${ex}</div><div style="font-size:11px;color:var(--dim);margin-top:2px;">${ss.map(s=>`${s.w}×${s.r}`).join(', ')}</div><div style="font-family:'DM Mono',monospace;font-size:12px;color:var(--acc2);margin-top:2px;">FSS ${calcFss(ss).toFixed(0)}</div></div>`;
+    }
+    div.innerHTML=html;el.appendChild(div);
+  });
+}
+function updateSettings(){
+  document.getElementById('sess-count').textContent=sessions.length+'セット';
+  document.getElementById('set-bw').value=settings.bw;
+  document.getElementById('set-bench').value=settings.base_bench;
+  document.getElementById('set-squat').value=settings.base_squat;
+  document.getElementById('set-dead').value=settings.base_dead;
+  updateAutoLevelDisplay();
+}
+
+// ═══════════════ UI HELPERS ═══════════════
+function showPage(name,btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='predict')renderPredictCharts();
+  if(name==='history')renderHistory();
+  if(name==='calendar')renderCalendar();
+}
+function setMode(m){
+  mode=m;saveStorage();
+  document.getElementById('btn-beginner').classList.toggle('active',m==='beginner');
+  document.getElementById('btn-advanced').classList.toggle('active',m==='advanced');
+  document.getElementById('tog-beginner').classList.toggle('on',m==='beginner');
+  document.getElementById('tog-advanced').classList.toggle('on',m==='advanced');
+}
+function toast(msg){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+// ─── コンパウンド係数（CNS負荷・多関節疲労を補正）───
+// 根拠: 2/23デッド日(きつかった)が補正後6049、
+//       3/3スクワット高ボリューム日が7668 → 感覚と整合
+// FSS係数（疲労-回復コスト）
+// 修正根拠: Barnes 2019（デッドとスクワットのCNS疲労差なし）/ Carroll 2017（CNS回復は数分）
+// 係数はエキセントリック負荷・総筋量動員・ROM に基づく末梢疲労コスト
+const FSS_COEF={
+  // PULL compound（エキセントリック大 + 大筋群）
+  'デッドリフト':1.3,'スモウデッドリフト':1.25,'ルーマニアンデッドリフト':1.3,
+  'チンニング':1.1,'ワイドグリップチンニング':1.1,
+  'バーベルベントオーバーロー':1.15,'ローイング':1.1,'ダンベルローイング':1.0,
+  'ケーブルロー':0.95,'シーテッドケーブルロー':0.95,'ラットプルダウン':0.95,
+  'プルオーバー':0.85,'フェイスプル':0.65,'リアデルトフライ':0.60,'シュラッグ':0.70,
+  // PUSH compound（エキセントリック大 + 大筋群）
+  'スクワット':1.3,'フロントスクワット':1.3,'ハックスクワット':1.15,
+  'ブルガリアンスプリットスクワット':1.2,
+  'ベンチプレス':1.05,'インクラインベンチプレス':1.05,'デクラインベンチプレス':1.0,
+  'ダンベルベンチプレス':0.95,'インクラインダンベルプレス':0.95,
+  'ショルダープレス':1.05,'ダンベルショルダープレス':1.0,'アーノルドプレス':0.95,
+  'ディップス':1.1,'プッシュアップ':0.70,
+  // 単関節・アイソレーション（局所疲労のみ）
+  'ケーブルフライ':0.65,'ダンベルフライ':0.65,'ペックデック':0.60,
+  'ラテラルレイズ':0.50,'フロントレイズ':0.50,
+  'トライセプスプレスダウン':0.50,'スカルクラッシャー':0.55,
+  'ライイングトライセプスエクステンション':0.55,
+  'ケーブルトライセプスプレスダウン':0.50,'オーバーヘッドトライセプスエクステンション':0.55,
+  'ダンベルカール':0.55,'バーベルカール':0.60,'ハンマーカール':0.50,
+  'インクラインカール':0.50,'ケーブルカール':0.50,
+  'プリーチャーカール':0.55,'コンセントレーションカール':0.45,
+  // LEGS
+  'レッグプレス':0.70,'レッグカール':0.60,'シーテッドレッグカール':0.60,
+  'レッグエクステンション':0.55,
+  'ランジ':1.05,'ウォーキングランジ':1.05,
+  'ヒップスラスト':0.85,'グルートブリッジ':0.60,
+  'カーフレイズ':0.45,'シーテッドカーフレイズ':0.45,
+  'アダクション':0.45,'アブダクション':0.45,
+  'ノルディックカール':1.1,'グッドモーニング':1.05,
+  // CORE
+  'プランク':0.35,'クランチ':0.30,'レッグレイズ':0.35,
+  'アブローラー':0.65,'ケーブルクランチ':0.45,
+};
+function fssCoef(ex){
+  if(FSS_COEF[ex])return FSS_COEF[ex];
+  // 部分一致フォールバック
+  // 修正: Barnes 2019でデッド/スクワットのCNS疲労差なし → 同等係数
+  if(ex.includes('デッド'))return 1.3;      // 旧1.7 → 末梢疲労ベースで1.3
+  if(ex.includes('スクワット'))return 1.3;  // 旧1.5 → デッドと同等
+  if(ex.includes('ベンチ')||ex.includes('プレス'))return 1.05;
+  if(ex.includes('チン')||ex.includes('プルアップ'))return 1.1;
+  if(ex.includes('ロー')||ex.includes('ラット'))return 1.0;
+  if(ex.includes('レッグ')||ex.includes('カーフ'))return 0.65;
+  return 1.0; // 単関節デフォルト
+}
+
+function calcFss(sets){
+  let t=0;
+  for(const s of sets){
+    const loadW=isDumbbell(s.exercise) ? s.w*2 : s.w; // ダンベルは片手記録→両手換算
+    const I=loadW/(s.rm1||epley(loadW,s.r));
+    t+=loadW*s.r*recruit(I)*fssCoef(s.exercise);
+  }
+  return t;
+}
+function exColor(ex){
+  const cat=EX_CAT[ex]||'OTHER';
+  if(cat==='PUSH')return 'var(--bench)';
+  if(cat==='LEGS')return 'var(--squat)';
+  if(cat==='PULL')return 'var(--dead)';
+  if(cat==='CORE')return 'var(--acc2)';
+  // フォールバック（カスタム種目）
+  if(ex.includes('ベンチ')||ex.includes('プレス')||ex.includes('フライ')||ex.includes('ディップ'))return 'var(--bench)';
+  if(ex.includes('スクワット')||ex.includes('レッグ')||ex.includes('ランジ')||ex.includes('カーフ')||ex.includes('ヒップ'))return 'var(--squat)';
+  if(ex.includes('デッド')||ex.includes('ロウ')||ex.includes('ラット')||ex.includes('ロー')||ex.includes('カール')||ex.includes('チン'))return 'var(--dead)';
+  return 'var(--acc2)';
+}
+function getSessionsByDate(){
+  const m={};for(const s of sessions){if(!m[s.date])m[s.date]=[];m[s.date].push(s);}return m;
+}
+
+// ═══════════════ EXERCISE PICKER ═══════════════
+function buildExPicker(){
+  const el=document.getElementById('ex-picker');el.innerHTML='';
+  const BIG3=['ベンチプレス','スクワット','デッドリフト'];
+  const cats=['PUSH','PULL','LEGS','CORE'];
+  const catLabel={'PUSH':'PUSH — 押す','PULL':'PULL — 引く','LEGS':'LEGS — 下半身','CORE':'CORE — 体幹'};
+
+  const makeBtn=ex=>{
+    const btn=document.createElement('button');btn.className='ex-btn';btn.dataset.ex=ex;
+    btn.textContent=ex;
+    btn.onclick=()=>{
+      const already=selectedExercises.includes(ex);
+      if(already){selectedExercises=selectedExercises.filter(e=>e!==ex);btn.classList.remove('selected');}
+      else{selectedExercises.push(ex);btn.classList.add('selected');}
+    };
+    return btn;
+  };
+
+  // BIG 3 を最上部に固定表示
+  const hd0=document.createElement('div');
+  hd0.style.cssText='font-family:"DM Mono",monospace;font-size:10px;letter-spacing:1.5px;color:var(--acc);padding:6px 2px 4px;';
+  hd0.textContent='BIG 3';
+  el.appendChild(hd0);
+  BIG3.forEach(ex=>el.appendChild(makeBtn(ex)));
+
+  // カテゴリ別（BIG3を除いて表示）
+  cats.forEach(cat=>{
+    const exInCat=EX_LIST.filter(ex=>EX_CAT[ex]===cat&&!BIG3.includes(ex));
+    if(!exInCat.length)return;
+    const hd=document.createElement('div');
+    hd.style.cssText='font-family:"DM Mono",monospace;font-size:10px;letter-spacing:1.5px;color:var(--dim);padding:10px 2px 4px;';
+    hd.textContent=catLabel[cat];
+    el.appendChild(hd);
+    exInCat.forEach(ex=>el.appendChild(makeBtn(ex)));
+  });
+}
+
+// ═══════════════ GOALS & SUGGEST ═══════════════
+const GOALS_CFG={
+  // sMin: 疲労・バジェット考慮後の最低セット数（研究上の最小有効ボリューム）
+  // rMax: 疲労補正込みの上限rep（高レップ過剰を防ぐ）
+  hypertrophy:{label:'筋肥大',icon:'💪',hint:'8〜12rep',I:[0.65,0.80],r:[8,12],s:[3,5],rpe:8.0, sMin:2, rMax:15},
+  strength:   {label:'筋力',  icon:'🏋️',hint:'2〜5rep', I:[0.80,0.93],r:[2,5], s:[4,6],rpe:8.5, sMin:2, rMax:6},
+  peaking:    {label:'ピーク',icon:'🎯',hint:'1〜3rep', I:[0.90,0.97],r:[1,3], s:[3,5],rpe:9.0, sMin:1, rMax:4},
+};
+
+// 疲労レベル定義
+const FAT_LEVELS=[
+  {label:'FRESH',     icon:'⚡',color:'#3dd6a3', IAdj:+0.02, RAdj: 0, SAdj:+1, rpeAdj:+0.5},
+  {label:'LIGHT',     icon:'🟢',color:'#7ec8a0', IAdj: 0.00, RAdj: 0, SAdj: 0, rpeAdj: 0.0},
+  {label:'MODERATE',  icon:'🟡',color:'#ffc94a', IAdj:-0.04, RAdj:+2, SAdj:-1, rpeAdj:-0.5},
+  {label:'HIGH',      icon:'🔴',color:'#f07a3a', IAdj:-0.09, RAdj:+3, SAdj:-2, rpeAdj:-1.0},
+  {label:'OVERTRAIN', icon:'💀',color:'#f06b6b', IAdj:-0.15, RAdj:+4, SAdj:-2, rpeAdj:-1.5},
+];
+
+// ─── ダンベル種目（ドラムは片手重量、FSS計算は×2） ───
+const DUMBBELL_EX=new Set([
+  'ダンベルベンチプレス','インクラインダンベルプレス','ダンベルショルダープレス',
+  'アーノルドプレス','ダンベルフライ','ダンベルローイング','ダンベルカール',
+  'ハンマーカール','インクラインカール','コンセントレーションカール',
+  'ラテラルレイズ','フロントレイズ','リアデルトフライ','プルオーバー',
+]);
+function isDumbbell(ex){ return DUMBBELL_EX.has(ex)||ex.includes('ダンベル'); }
+
+// ─── 経験レベル別の補助種目比率補正 ───
+// BIG3は実測値なので補正なし、補助種目のみ調整
+// 初級: アイソレーション弱め、中級: ベース、上級: 発達した補助筋
+const LEVEL_ADJ={
+  beginner: {
+    push_iso:0.88, push_compound:0.95,   // フライ系・単関節弱め
+    pull_iso:0.86, pull_compound:0.93,
+    legs_iso:0.90, legs_compound:0.95,
+  },
+  intermediate: {
+    push_iso:1.00, push_compound:1.00,
+    pull_iso:1.00, pull_compound:1.00,
+    legs_iso:1.00, legs_compound:1.00,
+  },
+  advanced: {
+    push_iso:1.08, push_compound:1.04,
+    pull_iso:1.10, pull_compound:1.05,
+    legs_iso:1.06, legs_compound:1.04,
+  },
+};
+// ─── BIG3合計値でレベル自動判定 ───
+// 根拠: Rippetoe強度標準 80kg男性: 初心者240kg/中級320kg/上級416kg
+// 体重差の誤差を吸収して 300/450 を採用
+// ─── DOTS スコア（体重・性別正規化）
+// ─── DOTS スコア（体重・性別正規化）
+// 出典: Junghanns & Güllich 2020, IPF採用公式, OpenPowerlifting実装
+// DOTS = Total(kg) × 500 / poly(BW)  — 4次多項式（正確な係数）
+const DOTS_COEF_M=[-0.000001093, 0.0009523, -0.1475, 9.1875, 244.765];   // 男性
+const DOTS_COEF_F=[-0.0000010706, 0.0005765, -0.02255, -2.042, 403.98];  // 女性
+function calcDots(total,bw,gender){
+  const c=(gender==='female')?DOTS_COEF_F:DOTS_COEF_M;
+  const d=c[0]*bw**4+c[1]*bw**3+c[2]*bw**2+c[3]*bw+c[4];
+  return Math.max(1, total*500/Math.max(d,1));
+}
+function getDotsScore(){
+  const total=settings.base_bench+settings.base_squat+settings.base_dead;
+  return calcDots(total, settings.bw||75, settings.gender||'male').toFixed(0);
+}
+function getAutoLevel(){
+  const dots=+getDotsScore();
+  // DOTS閾値: 体重・性別正規化 出典: Rhea 2003 / Junghanns 2020
+  // 男性80kgの場合 → 300≒BIG3 288kg / 460≒BIG3 442kg
+  // 女性60kgの場合 → 300≒BIG3 188kg / 460≒BIG3 287kg
+  // 検証: Brad(87kg,293kg)=DOTS298→初心者✅ / Powerbuilder(80kg,458kg)=DOTS478→中級→実態中級✅
+  if(dots<300) return 'beginner';
+  if(dots<460) return 'intermediate';
+  return 'advanced';
+}
+function getLvAdj(category='push_iso'){
+  const lv=getAutoLevel();
+  return (LEVEL_ADJ[lv]||LEVEL_ADJ.intermediate)[category]||1.0;
+}
+
+// ─── 各種目の推定1RM（ベンチ:スクワット:デッド = 3:4:5 比率に基づく）
+// 出典: StrengthLevel 1.53億件データ / Rippetoe強度標準 / PubMed (809,986試合データ)
+// ダンベル種目: 返値は両手合計。ドラム表示は呼び出し側で÷2する。
+function getBaseRm1(ex){
+  const b=settings.base_bench, s=settings.base_squat, d=settings.base_dead;
+  const lpi=getLvAdj('push_iso'), lpc=getLvAdj('push_compound');
+  const lli=getLvAdj('pull_iso'), llc=getLvAdj('pull_compound');
+  const lgi=getLvAdj('legs_iso'), lgc=getLvAdj('legs_compound');
+  switch(ex){
+    // ── BIG 3（実測値そのまま）──
+    case 'ベンチプレス':              return b;
+    case 'スクワット':                return s;
+    case 'デッドリフト':              return d;
+    // ── PUSH compound ──
+    case 'デクラインベンチプレス':    return b*1.04*lpc;
+    case 'インクラインベンチプレス':  return b*0.87*lpc;
+    case 'ダンベルベンチプレス':      return b*0.83*lpc; // 両手合計
+    case 'インクラインダンベルプレス':return b*0.72*lpc;
+    case 'ショルダープレス':          return b*0.62*lpc;
+    case 'ダンベルショルダープレス':  return b*0.53*lpc;
+    case 'アーノルドプレス':          return b*0.50*lpc;
+    case 'ディップス':                return b*0.93*lpc;
+    case 'プッシュアップ':            return b*0.67*lpc;
+    // ── PUSH isolation ──
+    case 'ケーブルフライ':            return b*0.37*lpi;
+    case 'ダンベルフライ':            return b*0.35*lpi;
+    case 'ペックデック':              return b*0.40*lpi;
+    case 'ラテラルレイズ':            return b*0.14*lpi;
+    case 'フロントレイズ':            return b*0.16*lpi;
+    case 'トライセプスプレスダウン':  return b*0.28*lpi;
+    case 'スカルクラッシャー':        return b*0.35*lpi;
+    case 'ライイングトライセプスエクステンション':return b*0.33*lpi;
+    case 'ケーブルトライセプスプレスダウン':      return b*0.27*lpi;
+    case 'オーバーヘッドトライセプスエクステンション':return b*0.29*lpi;
+    // ── PULL compound ──
+    case 'スモウデッドリフト':        return d*1.04*llc;
+    case 'ルーマニアンデッドリフト':  return d*0.80*llc;
+    case 'チンニング':
+    case 'ワイドグリップチンニング':  return d*0.57*llc;
+    case 'ラットプルダウン':          return d*0.55*llc;
+    case 'ローイング':
+    case 'バーベルベントオーバーロー':return d*0.60*llc;
+    case 'ダンベルローイング':        return d*0.52*llc;
+    case 'ケーブルロー':
+    case 'シーテッドケーブルロー':    return d*0.55*llc;
+    case 'シュラッグ':                return d*0.87*llc;
+    case 'プルオーバー':              return b*0.44*llc;
+    // ── PULL isolation ──
+    case 'フェイスプル':              return b*0.22*lli;
+    case 'リアデルトフライ':          return b*0.11*lli;
+    case 'ダンベルカール':            return b*0.25*lli;
+    case 'バーベルカール':            return b*0.31*lli;
+    case 'ハンマーカール':            return b*0.27*lli;
+    case 'インクラインカール':        return b*0.22*lli;
+    case 'ケーブルカール':            return b*0.23*lli;
+    case 'プリーチャーカール':        return b*0.27*lli;
+    case 'コンセントレーションカール':return b*0.19*lli;
+    // ── LEGS compound ──
+    case 'フロントスクワット':        return s*0.83*lgc;
+    case 'ハックスクワット':          return s*1.12*lgc;
+    case 'ブルガリアンスプリットスクワット':return s*0.57*lgc;
+    case 'レッグプレス':              return s*1.83*lgc;
+    case 'ランジ':
+    case 'ウォーキングランジ':        return s*0.48*lgc;
+    case 'ヒップスラスト':            return d*0.73*lgc;
+    case 'グルートブリッジ':          return d*0.55*lgc;
+    case 'グッドモーニング':          return d*0.42*lgc;
+    // ── LEGS isolation ──
+    case 'レッグカール':              return s*0.39*lgi;
+    case 'シーテッドレッグカール':    return s*0.38*lgi;
+    case 'レッグエクステンション':    return s*0.44*lgi;
+    case 'カーフレイズ':              return s*0.57*lgi;
+    case 'シーテッドカーフレイズ':    return s*0.42*lgi;
+    case 'アダクション':              return s*0.24*lgi;
+    case 'アブダクション':            return s*0.22*lgi;
+    case 'ノルディックカール':        return s*0.31*lgi;
+    // ── CORE ──
+    case 'ケーブルクランチ':          return b*0.18;
+    case 'アブローラー':              return b*0.22;
+    case 'クランチ':
+    case 'レッグレイズ':              return b*0.08;
+    case 'プランク':                  return b*0.05;
+    // カスタム種目フォールバック
+    default:
+      if(ex.includes('デッド'))return d;
+      if(ex.includes('スクワット'))return s;
+      if(ex.includes('ベンチ')||ex.includes('プレス'))return b*0.85;
+      if(ex.includes('カール'))return b*0.25;
+      if(ex.includes('ロー')||ex.includes('ラット'))return d*0.55;
+      if(ex.includes('レッグ'))return s*0.45;
+      return b;
+  }
+}
+
+// ─── 二相性疲労回復モデル (Carroll 2017 / González-Badillo 2016)
+// fast成分: τ=0.3日(7h) → 代謝・エネルギー系疲労
+// slow成分: τ=2.5日    → 筋損傷・構造的疲労
+// RIR補正: 低RIR(高強度に近い)ほど構造疲労の比重増加 (Robinson 2024)
+function biphasicDecay(diffDays, rpeVal){
+  const rpe=rpeVal||8;
+  const rir=Math.max(0,10-rpe);
+  // 高強度ほど slow成分の比重増加
+  const slowWeight=0.4+Math.min(0.5,(10-rir)/10*0.5);
+  const fastWeight=1-slowWeight;
+  return fastWeight*Math.exp(-diffDays/0.3)+slowWeight*Math.exp(-diffDays/2.5);
+}
+function getFatigueLevel(ex){
+  const today=new Date().toISOString().slice(0,10);
+  const todayMs=new Date(today).getTime();
+  const row=timeline.find(r=>r.date===today)||timeline[timeline.length-1];
+  const hp=row?row.hp:5,sp=row?row.sp:2,fat=row?row.fat:2;
+
+  // グローバル疲労比率 (0〜1)
+  const globalFatRatio=fat/Math.max(hp+sp+fat,1);
+
+  // 関連筋への蓄積疲労（二相性減衰 + RIR補正）
+  const M=getMap(ex);
+  const recentSess=sessions.filter(s=>{
+    const diffDays=(todayMs-new Date(s.date).getTime())/864e5;
+    return diffDays>=0&&diffDays<=6;
+  });
+  let muscFatLoad=0;
+  recentSess.forEach(s=>{
+    const sM=getMap(s.exercise);
+    const diffDays=(todayMs-new Date(s.date).getTime())/864e5;
+    const decay=biphasicDecay(diffDays, s.rpe);
+    const overlap=Object.keys(M).reduce((a,p)=>a+(M[p]||0)*(sM[p]||0),0);
+    muscFatLoad+=s.w*s.r*overlap*decay/200;
+  });
+
+  // 最後にこの種目をやった日
+  const exSess=sessions.filter(s=>s.exercise===ex).sort((a,b)=>b.date.localeCompare(a.date));
+  const daysSinceLast=exSess.length?Math.floor((todayMs-new Date(exSess[0].date).getTime())/864e5):99;
+
+  // 疲労スコア統合 (0〜1)
+  const muscScore=Math.min(1, muscFatLoad/8);
+  const globalScore=globalFatRatio;
+  const recencyBonus=daysSinceLast<=1?0.2:daysSinceLast<=2?0.1:0;
+  const combined=Math.min(1, globalScore*0.5+muscScore*0.5+recencyBonus);
+
+  // レベル判定
+  let lvl;
+  if(combined<0.18)lvl=0;
+  else if(combined<0.35)lvl=1;
+  else if(combined<0.55)lvl=2;
+  else if(combined<0.72)lvl=3;
+  else lvl=4;
+
+  return{lvl,combined,globalFatRatio,muscScore,daysSinceLast};
+}
+
+// ─────────────────────────────────────────────────────
+// セッション総バジェット（事前疲労レベルから決定）
+// 0=FRESH:1.0 → 4=OVERTRAIN:0.25
+// ─────────────────────────────────────────────────────
+// ═══════════════ WEEKLY VOLUME THEORY ═══════════════
+// 出典: Israetel et al. (RP Strength), Schoenfeld 2017 meta-analysis, Krieger 2010
+// MEV = Minimum Effective Volume / MAV = Maximum Adaptive Volume / MRV = Maximum Recoverable Volume
+const MUSCLE_VOL={
+  Chest:     {MEV:4,  MAV:12, MRV:22, daily:8},
+  Lats:      {MEV:4,  MAV:14, MRV:25, daily:8},
+  Posterior: {MEV:4,  MAV:12, MRV:20, daily:6},
+  Quads:     {MEV:6,  MAV:16, MRV:26, daily:8},
+  Glutes:    {MEV:4,  MAV:12, MRV:20, daily:6},
+  Triceps:   {MEV:4,  MAV:12, MRV:20, daily:6},
+  Neural:    {MEV:2,  MAV:8,  MRV:15, daily:5},
+};
+
+// 直近7日間の筋群別セット数を集計
+// 有効セット判定: 強度55%以上（Israetel "hard set" 基準）
+// intensity = 実際の重量 / 推定1RM（種目別ベースライン）
+const EFF_SET_THRESHOLD = 0.55;
+
+function isEffectiveSet(w, r, ex){
+  const rm1 = getBaseRm1(ex);
+  if(!rm1) return true;
+  const loadW = isDumbbell(ex) ? w * 2 : w;
+  // e1RM(Epley式)でその日の実力を推定し、それに対する強度で判定
+  const e1rm = epley(loadW, r);
+  const intensity = loadW / e1rm; // = 1/(1+r/30) … rep依存だがbaseRm1でスケール
+  // より正確: ベースライン1RMに対する絶対強度
+  const absIntensity = loadW / rm1;
+  // 両方のチェック: rep的にも有効（≤20rep）かつ絶対強度も閾値以上
+  return absIntensity >= EFF_SET_THRESHOLD && r <= 30;
+}
+
+// RIR補正係数 (Robinson et al. 2024: 失敗近接度と筋肥大の用量反応)
+// RIR=0-1→1.0 / RIR=2-3→0.9 / RIR=4→0.8 / RIR=5+→0.7
+function rirMultiplier(rpe){
+  const rir=Math.max(0,10-(rpe||8));
+  if(rir<=1)return 1.0;
+  if(rir<=3)return 0.9;
+  if(rir<=4)return 0.8;
+  return 0.7;
+}
+// フラクショナル計上 (Pelland 2025: 多関節種目の間接筋は0.5credit)
+// 主動筋（最大負荷筋群）=1.0, 補助筋=0.5
+function getFractionalMultiplier(muscleContrib, maxContrib){
+  return muscleContrib >= maxContrib * 0.6 ? 1.0 : 0.5;
+}
+function getWeeklySetsByMuscle(){
+  const today=new Date().toISOString().slice(0,10);
+  const todayMs=new Date(today).getTime();
+  const weekAgo=new Date(todayMs-6*864e5).toISOString().slice(0,10);
+  const acc={};
+  Object.keys(MUSCLE_VOL).forEach(m=>acc[m]=0);
+  sessions.filter(s=>s.date>=weekAgo&&s.date<=today).forEach(s=>{
+    if(!isEffectiveSet(s.w, s.r, s.exercise)) return;
+    const rm1=getBaseRm1(s.exercise);
+    const loadW=isDumbbell(s.exercise)?s.w*2:s.w;
+    const intensity=rm1>0?Math.min(1.2,loadW/rm1):1.0;
+    const rirMult=rirMultiplier(s.rpe);
+    const M=getMap(s.exercise);
+    // 最大貢献筋群を特定（フラクショナル基準）
+    const maxContrib=Math.max(...Object.values(M).filter(v=>v>0));
+    Object.keys(MUSCLE_VOL).forEach(m=>{
+      if(!M[m]||M[m]<=0.1) return;
+      const fracMult=getFractionalMultiplier(M[m],maxContrib);
+      // Volume Load正規化 × RIR補正 × フラクショナル係数
+      const wv=1*s.r*intensity/7.5*rirMult*fracMult;
+      acc[m]+=wv;
+    });
+  });
+  Object.keys(acc).forEach(m=>acc[m]=+acc[m].toFixed(1));
+  return acc;
+}
+
+// 種目が今週何セット実施されたか（当日除く）
+function getWeeklyExSets(ex){
+  const today=new Date().toISOString().slice(0,10);
+  const weekAgo=new Date(new Date(today).getTime()-6*864e5).toISOString().slice(0,10);
+  return sessions.filter(s=>s.exercise===ex&&s.date>=weekAgo&&s.date<today).length;
+}
+
+// 今セッションの予定を加えた週合計（フラクショナル + RIR補正 + 強度加重）
+// Pelland 2025 / Robinson 2024 に準拠
+function getProjectedWeeklyMuscle(){
+  const base=getWeeklySetsByMuscle();
+  selectedExercises.forEach(ex=>{
+    const dm=exDrumMap[ex];
+    if(!dm) return;
+    const w=dm.w.getValue(), r=dm.r.getValue(), s=dm.s.getValue();
+    if(!isEffectiveSet(w, r, ex)) return;
+    const rm1=getBaseRm1(ex);
+    const loadW=isDumbbell(ex)?w*2:w;
+    const intensity=rm1>0?Math.min(1.2,loadW/rm1):1.0;
+    // セッション設定中のRIRは不明→ 強度から推定 (高強度≒低RIR)
+    const estRpe=Math.min(9.5,5+intensity*4.5);
+    const rirMult=rirMultiplier(estRpe);
+    const M=getMap(ex);
+    const maxContrib=Math.max(...Object.values(M).filter(v=>v>0));
+    Object.keys(MUSCLE_VOL).forEach(m=>{
+      if(!M[m]||M[m]<=0.1) return;
+      const fracMult=getFractionalMultiplier(M[m],maxContrib);
+      const wv=+(s*r*intensity/7.5*rirMult*fracMult).toFixed(2);
+      base[m]=(base[m]||0)+wv;
+    });
+  });
+  Object.keys(base).forEach(m=>base[m]=+base[m].toFixed(1));
+  return base;
+}
+
+// 主要筋群の週セット数とMEV/MAV/MRV判定
+// weekSetsOverride: projected集計を外から渡せる（ドラム変更時のリアルタイム更新用）
+// ─── 動的MRV (Pelland 2025: 逓減リターン型)
+// 直近4週のボリュームが基準の70%以下なら回復してMRVが拡張
+// 基準値を超えるほどMRVが圧縮 (オーバーリーチ蓄積を反映)
+// 出典: Schoenfeld 2017 (MEV/MRVの個人差), Baz-Valle 2022 (20set超で効果低下)
+function getDynamicMRV(muscle){
+  const baseMV=MUSCLE_VOL[muscle];
+  if(!baseMV)return null;
+  // 直近4週のボリューム平均
+  const today=new Date().toISOString().slice(0,10);
+  const todayMs=new Date(today).getTime();
+  let weeklyTotals=[];
+  for(let w=0;w<4;w++){
+    const wEnd=new Date(todayMs-w*7*864e5).toISOString().slice(0,10);
+    const wStart=new Date(todayMs-(w+1)*7*864e5).toISOString().slice(0,10);
+    const wSets=sessions.filter(s=>s.date>=wStart&&s.date<=wEnd&&isEffectiveSet(s.w,s.r,s.exercise));
+    let wVol=0;
+    wSets.forEach(s=>{
+      const M=getMap(s.exercise);
+      if(M[muscle]&&M[muscle]>0.1){
+        const rm1=getBaseRm1(s.exercise);
+        const loadW=isDumbbell(s.exercise)?s.w*2:s.w;
+        const intensity=rm1>0?Math.min(1.2,loadW/rm1):1.0;
+        wVol+=s.r*intensity/7.5*rirMultiplier(s.rpe||8)*(M[muscle]>=0.3?1.0:0.5);
+      }
+    });
+    weeklyTotals.push(wVol);
+  }
+  const avg4w=weeklyTotals.length?weeklyTotals.reduce((a,b)=>a+b,0)/weeklyTotals.length:0;
+  // 基準ボリュームとの比率でMRV/MEVをスケール
+  // 低ボリューム期(avg<MEV*0.7) → MRV+20%, MEV-20% (回復・デロードからの拡張)
+  // 高ボリューム期(avg>MAV) → MRV-15% (蓄積疲労でリカバリー能力低下)
+  const baseline=baseMV.MAV;
+  const ratio=baseline>0?avg4w/baseline:0;
+  let mrvScale=1.0, mevScale=1.0;
+  if(ratio<0.5){mrvScale=1.20;mevScale=0.80;}
+  else if(ratio<0.7){mrvScale=1.10;mevScale=0.90;}
+  else if(ratio>1.3){mrvScale=0.85;mevScale=1.10;}
+  else if(ratio>1.0){mrvScale=0.93;mevScale=1.05;}
+  return{
+    MEV: Math.round(baseMV.MEV*mevScale),
+    MAV: baseMV.MAV,
+    MRV: Math.round(baseMV.MRV*mrvScale),
+    daily: baseMV.daily,
+    isDynamic: Math.abs(mrvScale-1.0)>0.01,
+    trend: ratio<0.7?'↑拡張中':ratio>1.0?'↓圧縮中':'→標準',
+    avg4w: +avg4w.toFixed(1),
+  };
+}
+function getVolStatus(ex, weekSetsOverride){
+  const M=getMap(ex);
+  const weekSets=weekSetsOverride||getWeeklySetsByMuscle();
+  let mainMuscle='',maxContrib=0,mainSets=0;
+  Object.entries(M).forEach(([m,v])=>{
+    if(!MUSCLE_VOL[m]||v<=0.1)return;
+    if(v>maxContrib){maxContrib=v;mainMuscle=m;mainSets=weekSets[m]||0;}
+  });
+  if(!mainMuscle)return{zone:'—',color:'var(--dim)',sAdj:0,mainMuscle:'',mainSets:0,mv:null};
+
+  const mv=getDynamicMRV(mainMuscle)||MUSCLE_VOL[mainMuscle];
+  let zone,color,sAdj;
+  if(mainSets<mv.MEV){       zone='MEV未満'; color='#7ec8a0'; sAdj=+1;}
+  else if(mainSets<mv.MAV){  zone='MAV内';   color='var(--acc2)'; sAdj=0;}
+  else if(mainSets<mv.MRV){  zone='MAV超過'; color='#ffc94a'; sAdj=-1;}
+  else{                       zone='MRV超過'; color='#f06b6b'; sAdj=-2;}
+
+  return{zone,color,sAdj,mainMuscle,mainSets,mv};
+}
+
+const SESSION_BUDGET=[1.0,0.82,0.62,0.42,0.25];
+
+function getGlobalFatLevel(){
+  const today=new Date().toISOString().slice(0,10);
+  const row=timeline.find(r=>r.date===today)||timeline[timeline.length-1];
+  const hp=row?row.hp:5,sp=row?row.sp:2,fat=row?row.fat:2;
+  const ratio=fat/Math.max(hp+sp+fat,1);
+  if(ratio<0.18)return 0;
+  if(ratio<0.35)return 1;
+  if(ratio<0.55)return 2;
+  if(ratio<0.72)return 3;
+  return 4;
+}
+
+// 1セッションブロックが消費する「疲労コスト」（0〜0.6）
+// compound大・高強度・多セットほど高い
+// 疲労コスト推定 (Carroll 2017: CNS疲労は数分で回復 → CNS変数廃止)
+// 末梢疲労 = 強度² × FSS係数(エキセントリック/筋量) × sets × reps
+function estimateBlockCost(w,r,s,ex){
+  const rm1=getBaseRm1(ex);
+  const I=Math.min(1,w/rm1);
+  const M=getMap(ex);
+  // 動員筋量（多関節コンパウンドほど大きい）
+  const muscleLoad=(M.Posterior||0)+(M.Quads||0)+(M.Chest||0)+(M.Lats||0)*0.8+(M.Shoulder||0)*0.6;
+  return Math.min(1.0, I*I*muscleLoad*fssCoef(ex)*s*r/70);
+}
+
+// ─────────────────────────────────────────────────────
+// 優先度 + セッション内消費を考慮した1種目の提案計算
+// priority: 0=最優先, 1,2,3...
+// spent: 直前までの消費コスト合計
+// budget: セッション総バジェット
+// ─────────────────────────────────────────────────────
+function suggestFor(goalKey, ex, priority=0, spent=0, budget=1.0){
+  const g=GOALS_CFG[goalKey];
+  const rm1=getBaseRm1(ex);
+  const fatInfo=getFatigueLevel(ex);
+
+  // セッション内残余比率
+  const remaining=Math.max(0, budget-spent);
+  const remainRatio=total=>Math.max(0, remaining/Math.max(total,0.01));
+  const rr=remainRatio(budget);
+
+  // 優先度ペナルティ: 後の種目ほどセッション疲労が積み上がる想定
+  // priority=0は加算なし（最優先はフレッシュな状態で行う）
+  const sessionFatAdd = priority===0 ? 0 : Math.min(0.45, spent*1.5);
+  const adjustedCombined = Math.min(1, fatInfo.combined + sessionFatAdd);
+
+  // 合算後のレベル
+  let lvl;
+  if(adjustedCombined<0.18)lvl=0;
+  else if(adjustedCombined<0.35)lvl=1;
+  else if(adjustedCombined<0.55)lvl=2;
+  else if(adjustedCombined<0.72)lvl=3;
+  else lvl=4;
+  const fl=FAT_LEVELS[lvl];
+
+  // バジェット不足によるさらなる下方調整（優先度0は免除）
+  let budIAdj=0, budSAdj=0;
+  if(priority>0){
+    if(rr<0.25){budIAdj=-0.10; budSAdj=-2;}
+    else if(rr<0.50){budIAdj=-0.05; budSAdj=-1;}
+    else if(rr<0.70){budIAdj=-0.02; budSAdj= 0;}
+  }
+
+  // SP優位ボーナス
+  const today=new Date().toISOString().slice(0,10);
+  const row=timeline.find(r=>r.date===today)||timeline[timeline.length-1];
+  const hp=row?row.hp:5,sp=row?row.sp:2;
+  const spBonus=(goalKey==='hypertrophy'&&sp/Math.max(hp,1)<0.3)?0.02:0;
+
+  const midI=Math.max(g.I[0], Math.min(g.I[1],
+    (g.I[0]+g.I[1])/2 + fl.IAdj + budIAdj + spBonus));
+  const isDB=isDumbbell(ex);
+  // ダンベルは片手重量でドラム表示（rm1は両手合計基準なので÷2して提案）
+  const recW=isDB
+    ? Math.round(rm1*midI/2/2.5)*2.5       // 片手重量
+    : Math.round(rm1*midI/2.5)*2.5;         // 両手重量
+  // 週セットボリューム補正 + MAV/daily残余でハードキャップ
+  const baseWeekSets=getWeeklySetsByMuscle();
+  const volSt=getVolStatus(ex, baseWeekSets);
+  const weekSAdj=volSt.sAdj;
+
+  const recR=Math.max(g.r[0], Math.min(g.rMax,
+    Math.round((g.r[0]+g.r[1])/2)+fl.RAdj));
+
+  let recS=Math.max(g.sMin,
+    Math.round((g.s[0]+g.s[1])/2)+fl.SAdj+budSAdj+weekSAdj);
+
+  // ハードキャップ: MAV残余 & 1日上限を超えない
+  if(volSt.mv){
+    const remainMAV=Math.max(g.sMin, volSt.mv.MAV-(baseWeekSets[volSt.mainMuscle]||0));
+    const dailyMax=volSt.mv.daily;
+    recS=Math.min(recS, remainMAV, dailyMax);
+    recS=Math.max(g.sMin, recS); // sMin は最低保証
+  }
+  const recRpe=Math.max(5.5, Math.min(10, g.rpe+fl.rpeAdj));
+
+  // 実際の負荷計算はダンベルは両手合計（w*2）
+  const loadW = isDB ? recW*2 : recW;
+  const Ia=loadW/rm1, S=loadW*recR*recruit(Ia);
+  const hpS=S*hpFactor(Ia), spS=S*spFactor(Ia), mx=Math.max(hpS+spS,1);
+  const blockCost=estimateBlockCost(loadW,recR,recS,ex);
+
+  return{
+    w:recW,r:recR,s:recS,rpe:recRpe,I:midI,isDB,
+    e1rm:+epley(loadW,recR).toFixed(1),
+    hp:+hpS.toFixed(0),sp:+spS.toFixed(0),
+    hpPct:hpS/mx*100,spPct:spS/mx*100,
+    fatInfo,fl,priority,rr,blockCost,
+    adjustedLvl:lvl,sessionFatAdd,volSt
+  };
+}
+
+// ─────────────────────────────────────────────────────
+// 全種目をまとめて計算（優先度順コスト引き継ぎ）
+// バジェットは選択種目の最大疲労レベルで決定
+// → 💀がついている種目があれば全体バジェットも絞られる
+// ─────────────────────────────────────────────────────
+function computeSessionPlan(){
+  // 選択種目の疲労レベルをまず全取得
+  const fatInfos=selectedExercises.map(ex=>getFatigueLevel(ex));
+  // 最大レベル = セッション全体のバジェット決定
+  const worstLvl=fatInfos.length ? Math.max(...fatInfos.map(fi=>fi.lvl)) : getGlobalFatLevel();
+  const budget=SESSION_BUDGET[worstLvl];
+
+  let spent=0;
+  const plan=selectedExercises.map((ex,i)=>{
+    const goalKey=exGoals[ex]||'hypertrophy';
+    const p=suggestFor(goalKey,ex,i,spent,budget);
+    spent+=p.blockCost;
+    return{ex,p,spent:spent-p.blockCost,budgetUsed:p.blockCost};
+  });
+  return{plan,budget,globalLvl:worstLvl,totalSpent:spent};
+}
+
+// ─────────────────────────────────────────────────────
+// STEP2カード描画
+// ─────────────────────────────────────────────────────
+function buildExCards(){
+  const container=document.getElementById('ex-cards-list');
+  container.innerHTML='';
+  exDrumMap={};
+
+  const{plan,budget,globalLvl,totalSpent}=computeSessionPlan();
+  const globalFl=FAT_LEVELS[globalLvl];
+
+  // セッション負荷バー更新
+  const rawRatio=totalSpent/budget; // 1.0超え=バジェット超過
+  const budgetUsedPct=Math.min(100, rawRatio*100);
+  const isOver=rawRatio>1.0;
+  const barColor=rawRatio>1.2?'#f06b6b':rawRatio>0.9?'#f07a3a':rawRatio>0.6?'#ffc94a':'#3dd6a3';
+  const budgetEl=document.getElementById('session-budget-bar');
+  const budgetLabelEl=document.getElementById('session-budget-label');
+  if(budgetEl){
+    budgetEl.style.width=budgetUsedPct+'%';
+    budgetEl.style.background=barColor;
+    budgetEl.style.boxShadow=isOver?`0 0 6px ${barColor}`:'none';
+  }
+  if(budgetLabelEl){
+    const overStr=isOver?` (${((rawRatio-1)*100).toFixed(0)}%超過)`:'';
+    const statusText=rawRatio>1.2?'💀 大幅超過':rawRatio>0.9?'⚠️ 過負荷':rawRatio>0.6?'🔶 やや高め':rawRatio>0.35?'🟡 適切':'⚡ 余裕あり';
+    budgetLabelEl.textContent=`セッション負荷 ${budgetUsedPct.toFixed(0)}%${overStr}  ${statusText}（開始疲労: ${globalFl.icon}${globalFl.label}）`;
+  }
+
+  // 週ボリュームパネル描画（projected = 提案セット数込み）
+  // カード生成後にdrumMapが確定してからprojectedを計算
+  // → plan描画ループ後に呼び出す（下部で呼ぶ）
+  plan.forEach(({ex,p},i)=>{
+    const fl=p.fl, fi=p.fatInfo;
+    const col=exColor(ex);
+    const goalKey=exGoals[ex]||'hypertrophy';
+
+    // 優先度バッジ
+    const priBadge=i===0?'🥇 MAIN':i===1?'🥈 SUB':'🥉 ACC';
+    const priColor=i===0?'var(--acc)':i===1?'var(--sp)':'var(--muted)';
+
+    // 調整理由テキスト（優先度+疲労の合算）
+    const reasons=[];
+    if(i===0) reasons.push('最優先・フルで追い込む');
+    else{
+      const spentPct=Math.round(p.rr*100);
+      reasons.push(`残バジェット${spentPct}%`);
+    }
+    if(p.adjustedLvl>=3) reasons.push('疲労蓄積→軽量多回数');
+    else if(p.adjustedLvl>=2) reasons.push('中程度疲労→セット控えめ');
+    if(p.sessionFatAdd>0.15) reasons.push('セッション疲労大');
+    // 週ボリュームゾーン
+    const vs=p.volSt;
+    if(vs&&vs.zone!=='—'){
+      const volIcon=vs.zone==='MRV超過'?'🚫':vs.zone==='MAV超過'?'⚠️':vs.zone==='MAV内'?'✅':'📈';
+      reasons.push(`週${vs.mainSets}set ${volIcon}${vs.zone}`);
+    }
+
+    // 前回日数
+    const lastNote=fi.daysSinceLast>=99?'初回'
+      :fi.daysSinceLast===0?'本日2回目'
+      :fi.daysSinceLast===1?'昨日実施'
+      :`${fi.daysSinceLast}日前`;
+
+    const card=document.createElement('div');
+    card.className='prop-card';card.dataset.ex=ex;
+    card.style.borderLeft=`3px solid ${i===0?'var(--acc)':i===1?'var(--sp)':'var(--line)'}`;
+
+    const goalBtns=Object.entries(GOALS_CFG).map(([gk,gc])=>
+      `<button class="pgb${goalKey===gk?' active':''}" data-ex="${i}" data-goal="${gk}"
+        onclick="setExGoal2(${i},'${gk}');event.stopPropagation();">
+        <span class="pgb-icon">${gc.icon}</span><span class="pgb-name">${gc.label}</span>
+      </button>`).join('');
+
+    card.innerHTML=`
+      <div class="prop-card-hd">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-family:'DM Mono',monospace;font-size:9px;color:${priColor};">${priBadge}</span>
+          <div class="prop-ex-name" style="color:${col}">${ex}</div>
+        </div>
+        <span style="font-family:'DM Mono',monospace;font-size:9px;letter-spacing:1px;
+          background:${fl.color}22;border:1px solid ${fl.color}55;color:${fl.color};
+          border-radius:4px;padding:2px 7px;">${fl.icon}${fl.label}</span>
+      </div>
+      <div style="padding:0 14px 8px;display:flex;justify-content:space-between;align-items:center;gap:4px;">
+        <span style="font-size:10px;color:var(--dim);">${lastNote}</span>
+        <span style="font-size:10px;color:${fl.color};text-align:right;">${reasons.join(' / ')}</span>
+      </div>
+      <div class="prop-goal-row">${goalBtns}</div>
+      <div class="cdrum-row">
+        <div class="cdrum-wrap">
+          <div class="cdrum-label">${p.isDB?'片手 kg <span style="color:var(--acc);font-size:9px;">×2</span>':'重量 kg'}</div>
+          <div class="cdrum-outer" id="cdw-${i}"><div class="cdrum-sel"></div><div class="cdrum-unit">${p.isDB?'片手':'kg'}</div><div class="cdrum-list" id="cdwl-${i}"></div></div>
+        </div>
+        <div class="cdrum-wrap">
+          <div class="cdrum-label">回数 rep</div>
+          <div class="cdrum-outer" id="cdr-${i}"><div class="cdrum-sel"></div><div class="cdrum-unit">rep</div><div class="cdrum-list" id="cdrl-${i}"></div></div>
+        </div>
+        <div class="cdrum-wrap" style="max-width:68px;">
+          <div class="cdrum-label">セット</div>
+          <div class="cdrum-outer" id="cds-${i}"><div class="cdrum-sel"></div><div class="cdrum-unit">set</div><div class="cdrum-list" id="cdsl-${i}"></div></div>
+        </div>
+      </div>
+      <div class="prop-metrics" id="pmet-${i}">
+        <div class="prop-met"><div class="prop-met-val" id="pmet-e1rm-${i}">${p.e1rm}kg</div><div class="prop-met-label">e1RM</div></div>
+        <div class="prop-met"><div class="prop-met-val" style="color:var(--hp)" id="pmet-hp-${i}">${p.hp}</div><div class="prop-met-label">HP/set</div></div>
+        <div class="prop-met"><div class="prop-met-val" style="color:var(--sp)" id="pmet-sp-${i}">${p.sp}</div><div class="prop-met-label">SP/set</div></div>
+        <div class="prop-met"><div class="prop-met-val" id="pmet-int-${i}" style="color:${fl.color}">${(p.I*100).toFixed(0)}%</div><div class="prop-met-label">強度</div></div>
+      </div>
+      <div id="pmet-vol-${i}" style="margin-top:6px;padding:0 14px 10px;"></div>
+      <div id="pmet-cost-${i}" style="padding:0 14px 12px;"></div>`;
+    container.appendChild(card);
+
+    const isDB=p.isDB;
+    const WEIGHTS=isDB
+      ? (()=>{const a=[];for(let w=2.5;w<=120;w+=2.5)a.push(w);return a;})()   // ダンベル片手
+      : (()=>{const a=[];for(let w=10;w<=350;w+=2.5)a.push(w);return a;})();   // バーベル
+    const REPS=Array.from({length:35},(_,j)=>j+1);
+    const SETS=Array.from({length:12},(_,j)=>j+1);
+    const dW=buildCompactDrum(document.getElementById('cdwl-'+i),document.getElementById('cdw-'+i),WEIGHTS,p.w,()=>updateCardMetrics(i));
+    const dR=buildCompactDrum(document.getElementById('cdrl-'+i),document.getElementById('cdr-'+i),REPS,p.r,()=>updateCardMetrics(i));
+    const dS=buildCompactDrum(document.getElementById('cdsl-'+i),document.getElementById('cds-'+i),SETS,p.s,()=>updateCardMetrics(i));
+    exDrumMap[ex]={w:dW,r:dR,s:dS,wi:i,isDB};
+  });
+  // 初期描画: 全カードのメトリクス（負荷バー含む）を表示
+  if(selectedExercises.length) updateCardMetrics(0);
+  // ドラムマップ確定後にprojectedで週パネルを描画
+  updateWeeklyVolumePanel();
+}
+
+function setExGoal2(idx,goalKey){
+  const ex=selectedExercises[idx];
+  exGoals[ex]=goalKey;
+  // 目的変更 → 全カード再計算（コスト連鎖のため）
+  buildExCards();
+}
+
+function updateCardMetrics(idx){
+  const ex=selectedExercises[idx];
+  const dm=exDrumMap[ex];if(!dm)return;
+  const w=dm.w.getValue(),r=dm.r.getValue(),s=dm.s.getValue();
+  const loadW=dm.isDB?w*2:w;
+
+  // ── e1RM / HP / SP / 強度 ──
+  const rm1=epley(loadW,r),I=loadW/rm1,S=loadW*r*recruit(I);
+  const hp=(S*hpFactor(I)).toFixed(0),sp=(S*spFactor(I)).toFixed(0);
+  const intEl=document.getElementById('pmet-int-'+idx);
+  if(document.getElementById('pmet-e1rm-'+idx))
+    document.getElementById('pmet-e1rm-'+idx).textContent=rm1.toFixed(1)+'kg';
+  if(document.getElementById('pmet-hp-'+idx))
+    document.getElementById('pmet-hp-'+idx).textContent=hp;
+  if(document.getElementById('pmet-sp-'+idx))
+    document.getElementById('pmet-sp-'+idx).textContent=sp;
+  if(intEl) intEl.textContent=(I*100).toFixed(0)+'%';
+
+  // ── 週ボリューム（projected = 過去7日 + 今セッション全ドラム値）──
+  const projWeek=getProjectedWeeklyMuscle();
+  const vs=getVolStatus(ex, projWeek);
+  const volEl=document.getElementById('pmet-vol-'+idx);
+  const effSet=isEffectiveSet(w, r, ex);
+  if(volEl&&vs.mv){
+    const mv=vs.mv;
+    const cur=+(projWeek[vs.mainMuscle]||0).toFixed(1);
+    const pctBar=Math.min(100,(cur/mv.MRV)*100);
+    const mevP=(mv.MEV/mv.MRV)*100, mavP=(mv.MAV/mv.MRV)*100;
+    const c=vs.color;
+    const overStr=cur>mv.MRV?` ⚠️ MRV超過`:cur>mv.MAV?` MAV超過`:cur>=mv.MEV?' ✅最適域':' MEV未満';
+    const effWarn=effSet?'':`<span style="color:#f06b6b;margin-left:4px;">※強度低 有効セット外</span>`;
+    // 動的MRV表示 (1-c)
+    const dynStr=mv.isDynamic?`<span style="color:var(--dim);margin-left:4px;">${mv.trend}</span>`:'';
+    // RIRバイアス補正ヒント (4-d) Halperin 2022: 平均0.95rep過小評価
+    const rirHint=`<span style="color:var(--dim);font-size:8px;margin-left:4px;" title="Halperin 2022: 平均1rep余裕が多い">RIR実際+1</span>`;
+    volEl.innerHTML=`
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-bottom:2px;flex-wrap:wrap;gap:2px;">
+        <span style="color:${c}">${vs.mainMuscle} 週${cur}加重set${overStr}${effWarn}${dynStr}</span>
+        <span style="color:var(--dim)">MEV${mv.MEV} MAV${mv.MAV} MRV${mv.MRV}${rirHint}</span>
+      </div>
+      <div style="height:4px;background:var(--bg4);border-radius:2px;position:relative;">
+        <div style="height:100%;width:${pctBar}%;background:${c};border-radius:2px;transition:width .2s;"></div>
+        <div style="position:absolute;top:-1px;left:${mevP}%;width:1px;height:6px;background:var(--dim);opacity:.5;"></div>
+        <div style="position:absolute;top:-1px;left:${mavP}%;width:1px;height:6px;background:#ffc94a;opacity:.8;"></div>
+      </div>`;
+  }
+
+  // ── セッション負荷バー更新 ──
+  const{budget,globalLvl}=computeSessionPlan();
+  let totalCost=0;
+  const costPerEx=[];
+  selectedExercises.forEach((ex2,ei)=>{
+    const dm2=exDrumMap[ex2];if(!dm2){costPerEx.push(0);return;}
+    const lw2=dm2.isDB?dm2.w.getValue()*2:dm2.w.getValue();
+    const c2=estimateBlockCost(lw2,dm2.r.getValue(),dm2.s.getValue(),ex2);
+    costPerEx.push(c2);
+    totalCost+=c2;
+  });
+  const rawRatio=totalCost/budget;
+  const pct=Math.min(100,rawRatio*100);
+  const isOver=rawRatio>1.0;
+  const bc=rawRatio>1.2?'#f06b6b':rawRatio>0.9?'#f07a3a':rawRatio>0.6?'#ffc94a':'#3dd6a3';
+  const bel=document.getElementById('session-budget-bar');
+  const lel=document.getElementById('session-budget-label');
+  const flG=FAT_LEVELS[globalLvl];
+  if(bel){bel.style.width=pct+'%';bel.style.background=bc;bel.style.boxShadow=isOver?`0 0 6px ${bc}`:'none';}
+  if(lel){
+    const overStr=isOver?` (${((rawRatio-1)*100).toFixed(0)}%超過)`:'';
+    const st=rawRatio>1.2?'💀 大幅超過':rawRatio>0.9?'⚠️ 過負荷':rawRatio>0.6?'🔶 やや高め':rawRatio>0.35?'🟡 適切':'⚡ 余裕あり';
+    lel.textContent=`セッション負荷 ${pct.toFixed(0)}%${overStr}  ${st}（開始疲労: ${flG.icon}${flG.label}）`;
+  }
+  // 各カードにセッション負荷バーを描画
+  selectedExercises.forEach((ex2,ei)=>{
+    const costEl=document.getElementById('pmet-cost-'+ei);
+    if(!costEl)return;
+    const thisCost=costPerEx[ei]||0;
+    const thisPct=Math.min(100,(thisCost/budget)*100);
+    const totalPct=Math.min(100,rawRatio*100);
+    const sessionColor=rawRatio>1.2?'#f06b6b':rawRatio>0.9?'#f07a3a':rawRatio>0.6?'#ffc94a':'#3dd6a3';
+    const thisColor='var(--acc2)';
+    const totalOver=rawRatio>1.0;
+    costEl.innerHTML=`
+      <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--dim);margin-bottom:3px;display:flex;justify-content:space-between;">
+        <span>この種目の負荷 ${thisPct.toFixed(0)}%</span>
+        <span style="color:${sessionColor}">セッション計 ${totalPct.toFixed(0)}%${totalOver?' ⚠️':''}</span>
+      </div>
+      <div style="height:5px;background:var(--bg4);border-radius:3px;position:relative;overflow:hidden;">
+        <div style="position:absolute;left:0;top:0;height:100%;width:${totalPct}%;background:${sessionColor};opacity:0.25;border-radius:3px;transition:width .2s;"></div>
+        <div style="position:absolute;left:0;top:0;height:100%;width:${thisPct}%;background:${thisColor};border-radius:3px;transition:width .2s;"></div>
+      </div>`;
+  });
+
+  // ── 週ボリュームパネル（上部）更新 ──
+  updateWeeklyVolumePanel(projWeek);
+}
+
+function updateWeeklyVolumePanel(projWeekOverride){
+  const wvPanel=document.getElementById('weekly-volume-panel');
+  if(!wvPanel||!selectedExercises.length){if(wvPanel)wvPanel.style.display='none';return;}
+  const projWeek=projWeekOverride||getProjectedWeeklyMuscle();
+  wvPanel.style.display='block';
+  const shownMuscles=new Set();
+  selectedExercises.forEach(ex=>{
+    const M=getMap(ex);let best='',bestV=0;
+    Object.entries(M).forEach(([m,v])=>{if(MUSCLE_VOL[m]&&v>bestV){bestV=v;best=m;}});
+    if(best)shownMuscles.add(best);
+  });
+  let html='<div style="font-family:\'DM Mono\',monospace;font-size:9px;color:var(--dim);letter-spacing:1px;margin-bottom:6px;">週ボリューム（過去7日＋今回予定）</div>';
+  html+='<div style="display:flex;flex-direction:column;gap:5px;">';
+  shownMuscles.forEach(m=>{
+    const mv=getDynamicMRV(m)||MUSCLE_VOL[m];
+    const sets=+((projWeek[m]||0).toFixed(1));
+    const past=+((getWeeklySetsByMuscle()[m]||0).toFixed(1));
+    const today=+((sets-past).toFixed(1));
+    const pct=Math.min(100,(sets/mv.MRV)*100);
+    const mevP=(mv.MEV/mv.MRV)*100, mavP=(mv.MAV/mv.MRV)*100;
+    const c=sets<mv.MEV?'#7ec8a0':sets<mv.MAV?'var(--acc2)':sets<mv.MRV?'#ffc94a':'#f06b6b';
+    const zone=sets<mv.MEV?'MEV未満':sets<mv.MAV?'最適域':sets<mv.MRV?'やや過剰':'MRV超過';
+    const dynStr=mv.isDynamic?` <span style="color:var(--dim);font-size:8px;">${mv.trend}</span>`:'';
+    html+=`<div>
+      <div style="display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-bottom:2px;">
+        <span style="color:${c}">${m}${dynStr}</span>
+        <span>過去${past}+今回${today}=<b style="color:${c}">${sets}加重set</b> <span style="color:${c}">${zone}</span> (MAV:${mv.MAV} MRV:${mv.MRV})</span>
+      </div>
+      <div style="height:5px;background:var(--bg4);border-radius:2px;position:relative;">
+        <div style="height:100%;width:${pct}%;background:${c};border-radius:2px;transition:width .2s;"></div>
+        <div style="position:absolute;top:-1px;left:${mevP}%;width:1.5px;height:7px;background:var(--dim);opacity:.5;"></div>
+        <div style="position:absolute;top:-1px;left:${mavP}%;width:1.5px;height:7px;background:#ffc94a;opacity:.8;"></div>
+      </div>
+    </div>`;
+  });
+  html+='</div><div style="font-size:9px;color:var(--dim);margin-top:5px;">│ MEV (最小有効) &nbsp;│ MAV (最適上限)</div>';
+  wvPanel.innerHTML=html;
+}
+function openStep1(){
+  if(!calSelected){toast('日付を選択してください');return;}
+  selectedExercises=[];exGoals={};exDrumMap={};
+  document.querySelectorAll('.ex-btn').forEach(b=>b.classList.remove('selected'));
+  document.getElementById('ex-custom').value='';
+  document.getElementById('step1-date').textContent=calSelected+' — 種目を選ぶ';
+  document.getElementById('log-step1').style.display='block';
+  document.getElementById('log-step2').style.display='none';
+  document.getElementById('log-step3').style.display='none';
+  document.getElementById('log-edit').style.display='none';
+  setTimeout(()=>document.getElementById('log-step1').scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+function closeAll(){
+  ['log-step1','log-step2','log-step3','log-bulk-edit','log-edit'].forEach(id=>document.getElementById(id).style.display='none');
+}
+function closeEdit(){document.getElementById('log-edit').style.display='none';editingUid=null;}
+function backToStep1(){
+  document.getElementById('log-step2').style.display='none';
+  document.getElementById('log-step1').style.display='block';
+  setTimeout(()=>document.getElementById('log-step1').scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+function backToStep2(){
+  document.getElementById('log-step3').style.display='none';
+  document.getElementById('log-step2').style.display='block';
+  setTimeout(()=>document.getElementById('log-step2').scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+
+// ── STEP2: exercise cards with compact drums ──
+function goToStep2(){
+  const custom=document.getElementById('ex-custom').value.trim();
+  if(custom&&!selectedExercises.includes(custom))selectedExercises.push(custom);
+  if(!selectedExercises.length){toast('種目を選択してください');return;}
+  selectedExercises.forEach(ex=>{if(!exGoals[ex])exGoals[ex]='hypertrophy';});
+  document.getElementById('log-step1').style.display='none';
+  document.getElementById('log-step2').style.display='block';
+  document.getElementById('step2-title').textContent=calSelected+' — 目的と重量設定';
+  buildExCards();
+  setTimeout(()=>document.getElementById('log-step2').scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+
+// ── STEP3: セット詳細 ──
+function goToStep3(){
+  step3Sets=[];
+  selectedExercises.forEach(ex=>{
+    const dm=exDrumMap[ex];
+    if(!dm)return;
+    const w=dm.w.getValue(),r=dm.r.getValue(),s=dm.s.getValue();
+    for(let i=0;i<s;i++){
+      step3Sets.push({uid:mkUid(),ex,w,r,rir:2,rpe:8.0}); // default RIR 2 = RPE 8
+    }
+  });
+  if(!step3Sets.length){toast('セット数を確認してください');return;}
+  step3Mode='new';
+  document.getElementById('log-step2').style.display='none';
+  document.getElementById('log-step3').style.display='block';
+  document.getElementById('step3-title').textContent=calSelected+' — セット詳細';
+  renderStep3();
+  setTimeout(()=>document.getElementById('log-step3').scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+
+function renderStep3(){
+  const container=document.getElementById('step3-sets-list');
+  container.innerHTML='';
+  const isAdv=mode==='advanced';
+  // group by exercise
+  const groups={};const order=[];
+  step3Sets.forEach(s=>{
+    if(!groups[s.ex]){groups[s.ex]=[];order.push(s.ex);}
+    groups[s.ex].push(s);
+  });
+  order.forEach(ex=>{
+    const col=exColor(ex);
+    const grp=document.createElement('div');grp.className='step3-group';
+    grp.innerHTML=`<div class="step3-ex-hd" style="color:${col}">${ex}</div>`;
+    groups[ex].forEach((set,i)=>{
+      const row=document.createElement('div');row.className='step3-set-row';
+      const effortHtml = isAdv
+        ? `<div class="step3-rpe-ctrl">
+             <button class="step3-adj" onclick="adjRpe('${set.uid}',-0.5)">−</button>
+             <span class="step3-rpe-val" id="s3rpe-${set.uid}">${set.rpe.toFixed(1)}</span>
+             <button class="step3-adj" onclick="adjRpe('${set.uid}',0.5)">＋</button>
+             <span class="step3-unit">RPE</span>
+           </div>`
+        : `<div class="step3-rir" id="s3rir-${set.uid}">
+             ${[0,1,2,3,4].map(v=>`<button class="step3-rir-btn${set.rir===v?' active':''}" data-uid="${set.uid}" data-rir="${v}" onclick="setRir('${set.uid}',${v})">${v===0?'限':v===4?'4+':v}</button>`).join('')}
+           </div>`;
+      row.innerHTML=`
+        <div class="step3-num">${i+1}</div>
+        <div class="step3-ctrl">
+          <button class="step3-adj" onclick="adjW('${set.uid}',-2.5)">−</button>
+          <span class="step3-val" id="s3w-${set.uid}">${set.w}</span>
+          <button class="step3-adj" onclick="adjW('${set.uid}',2.5)">＋</button>
+          <span class="step3-unit">kg</span>
+        </div>
+        <div class="step3-x">×</div>
+        <div class="step3-ctrl">
+          <button class="step3-adj" onclick="adjR('${set.uid}',-1)">−</button>
+          <span class="step3-val" id="s3r-${set.uid}">${set.r}</span>
+          <button class="step3-adj" onclick="adjR('${set.uid}',1)">＋</button>
+          <span class="step3-unit">rep</span>
+        </div>
+        ${effortHtml}`;
+      grp.appendChild(row);
+    });
+    container.appendChild(grp);
+  });
+}
+
+function adjW(uid,delta){
+  const s=step3Sets.find(x=>x.uid===uid);if(!s)return;
+  s.w=Math.max(10,Math.round((s.w+delta)*10)/10);
+  const el=document.getElementById('s3w-'+uid);if(el)el.textContent=s.w;
+}
+function adjR(uid,delta){
+  const s=step3Sets.find(x=>x.uid===uid);if(!s)return;
+  s.r=Math.max(1,Math.min(30,s.r+delta));
+  const el=document.getElementById('s3r-'+uid);if(el)el.textContent=s.r;
+}
+function setRir(uid,rir){
+  const s=step3Sets.find(x=>x.uid===uid);if(!s)return;
+  s.rir=rir;
+  document.querySelectorAll(`.step3-rir-btn[data-uid="${uid}"]`).forEach(b=>b.classList.toggle('active',parseInt(b.dataset.rir)===rir));
+}
+
+function adjRpe(uid,delta){
+  const s=step3Sets.find(x=>x.uid===uid);if(!s)return;
+  s.rpe=Math.max(5.0,Math.min(10.0,Math.round((s.rpe+delta)*10)/10));
+  const el=document.getElementById('s3rpe-'+uid);if(el)el.textContent=s.rpe.toFixed(1);
+}
+
+function saveSession(){
+  if(!step3Sets.length){toast('セットがありません');return;}
+  const targetDate=calSelected||new Date().toISOString().slice(0,10);
+  step3Sets.forEach(s=>{
+    const rpe=mode==='advanced'?s.rpe:(10-s.rir);
+    sessions.push({uid:s.uid,date:targetDate,exercise:s.ex,w:s.w,r:s.r,rpe,rm1:+epley(s.w,s.r).toFixed(2)});
+  });
+  saveStorage();step3Sets=[];
+  closeAll();recompute();
+  selectCalDay(targetDate,getSessionsByDate()[targetDate]||null);
+  toast('保存しました ✓');
+}
+
+// ═══════════════ COMPACT DRUM ═══════════════
+function buildCompactDrum(listEl,outerEl,values,defaultVal,onChange){
+  const IH=32,OFFSET=32;
+  const count=values.length;
+  listEl.innerHTML=values.map(v=>`<div class="cdrum-item">${v}</div>`).join('');
+  const items=listEl.querySelectorAll('.cdrum-item');
+  let idx=Math.max(0,values.indexOf(defaultVal));
+  if(idx<0)idx=0;
+  let curY=0,velY=0,rafId=null,dragging=false,startY=0,startOff=0,lastY=0,lastT=0;
+  const idxToY=i=>OFFSET-i*IH;
+  const clamp=y=>Math.max(idxToY(count-1),Math.min(idxToY(0),y));
+  const yToIdx=y=>Math.round((idxToY(0)-y)/IH);
+  function paint(ai){items.forEach((el,i)=>el.classList.toggle('active',i===ai));}
+  function set(y,anim,fireChange){
+    curY=y;
+    listEl.style.transition=anim?'transform .18s cubic-bezier(.25,.8,.25,1)':'none';
+    listEl.style.transform=`translateY(${curY}px)`;
+    const ni=Math.max(0,Math.min(count-1,yToIdx(curY)));
+    paint(ni);
+    if(ni!==idx||fireChange){idx=ni;if(onChange)onChange(values[idx]);}
+    else idx=ni;
+  }
+  function snap(){set(clamp(idxToY(yToIdx(curY))),true,true);}
+  function momentum(){
+    if(Math.abs(velY)<0.5){snap();return;}
+    curY=clamp(curY+velY);
+    listEl.style.transition='none';
+    listEl.style.transform=`translateY(${curY}px)`;
+    const ni=Math.max(0,Math.min(count-1,yToIdx(curY)));paint(ni);
+    velY*=0.92;
+    rafId=requestAnimationFrame(momentum);
+  }
+  // ── タッチ ──
+  outerEl.addEventListener('touchstart',e=>{
+    cancelAnimationFrame(rafId);dragging=true;
+    startY=e.touches[0].clientY;startOff=curY;
+    lastY=startY;lastT=Date.now();velY=0;
+    listEl.style.transition='none';e.preventDefault();
+  },{passive:false});
+  outerEl.addEventListener('touchmove',e=>{
+    if(!dragging)return;
+    const now=Date.now(),dt=now-lastT;
+    velY=dt>0?(e.touches[0].clientY-lastY)/dt*16:0;
+    lastY=e.touches[0].clientY;lastT=now;
+    set(clamp(startOff+e.touches[0].clientY-startY),false,true);
+    e.preventDefault();
+  },{passive:false});
+  outerEl.addEventListener('touchend',()=>{
+    dragging=false;cancelAnimationFrame(rafId);
+    rafId=requestAnimationFrame(momentum);
+  });
+  // ── マウス（このドラム専用のmousemove/mouseupをdocumentに登録、終わったら解除）──
+  outerEl.addEventListener('mousedown',e=>{
+    cancelAnimationFrame(rafId);dragging=true;
+    startY=e.clientY;startOff=curY;
+    lastY=startY;lastT=Date.now();velY=0;
+    listEl.style.transition='none';e.preventDefault();
+    function onMove(e){
+      if(!dragging)return;
+      const now=Date.now(),dt=now-lastT;
+      velY=dt>0?(e.clientY-lastY)/dt*16:0;
+      lastY=e.clientY;lastT=now;
+      set(clamp(startOff+e.clientY-startY),false,true);
+    }
+    function onUp(){
+      if(!dragging)return;
+      dragging=false;
+      document.removeEventListener('mousemove',onMove);
+      document.removeEventListener('mouseup',onUp);
+      cancelAnimationFrame(rafId);
+      rafId=requestAnimationFrame(momentum);
+    }
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+  // ── ホイール ──
+  outerEl.addEventListener('wheel',e=>{
+    cancelAnimationFrame(rafId);
+    const ni=Math.max(0,Math.min(count-1,idx+(e.deltaY>0?1:-1)));
+    set(idxToY(ni),true,true);
+    e.preventDefault();
+  },{passive:false});
+  // 初期表示（onChange は発火しない）
+  curY=idxToY(idx);
+  listEl.style.transform=`translateY(${curY}px)`;
+  paint(idx);
+  return{getValue:()=>values[idx],setValue:(v,fire=false)=>{const i=values.indexOf(v);if(i>=0)set(idxToY(i),true,fire);}};
+}
+
+// ═══════════════ FULL DRUM (edit) ═══════════════
+const IH_FULL=44,OFF_FULL=48;
+const WEIGHTS_ALL=[];for(let w=10;w<=300;w+=2.5)WEIGHTS_ALL.push(w);
+const REPS_ALL=Array.from({length:30},(_,i)=>i+1);
+
+function buildFullDrum(listEl,outerEl,values,defaultVal,hiddenId){
+  const count=values.length;
+  listEl.innerHTML=values.map(v=>`<div class="drum-item">${v}</div>`).join('');
+  const items=listEl.querySelectorAll('.drum-item');
+  let idx=Math.max(0,values.indexOf(defaultVal));
+  let curY=0,velY=0,rafId=null,dragging=false,startY=0,startOff=0,lastY=0,lastT=0;
+  const idxToY=i=>OFF_FULL-i*IH_FULL;
+  const clamp=y=>Math.max(idxToY(count-1),Math.min(idxToY(0),y));
+  const yToIdx=y=>Math.round((idxToY(0)-y)/IH_FULL);
+  function paint(ai){items.forEach((el,i)=>el.classList.toggle('active',i===ai));}
+  function set(y,anim){
+    curY=y;listEl.style.transition=anim?'transform .18s cubic-bezier(.25,.8,.25,1)':'none';
+    listEl.style.transform=`translateY(${curY}px)`;
+    const i=Math.max(0,Math.min(count-1,yToIdx(curY)));paint(i);idx=i;
+    document.getElementById(hiddenId).value=values[i];
+  }
+  function snap(){set(clamp(idxToY(yToIdx(curY))),true);}
+  function momentum(){
+    if(Math.abs(velY)<0.5){snap();return;}
+    curY=clamp(curY+velY);listEl.style.transition='none';listEl.style.transform=`translateY(${curY}px)`;
+    const i=Math.max(0,Math.min(count-1,yToIdx(curY)));paint(i);velY*=0.92;rafId=requestAnimationFrame(momentum);
+  }
+  outerEl.addEventListener('touchstart',e=>{cancelAnimationFrame(rafId);dragging=true;startY=e.touches[0].clientY;startOff=curY;lastY=startY;lastT=Date.now();velY=0;listEl.style.transition='none';e.preventDefault();},{passive:false});
+  outerEl.addEventListener('touchmove',e=>{if(!dragging)return;const now=Date.now(),dt=now-lastT;velY=dt>0?(e.touches[0].clientY-lastY)/dt*16:0;lastY=e.touches[0].clientY;lastT=now;set(clamp(startOff+e.touches[0].clientY-startY),false);e.preventDefault();},{passive:false});
+  outerEl.addEventListener('touchend',()=>{dragging=false;cancelAnimationFrame(rafId);rafId=requestAnimationFrame(momentum);});
+  outerEl.addEventListener('mousedown',e=>{
+    cancelAnimationFrame(rafId);dragging=true;startY=e.clientY;startOff=curY;
+    lastY=startY;lastT=Date.now();velY=0;listEl.style.transition='none';e.preventDefault();
+    function onMove(e){if(!dragging)return;const now=Date.now(),dt=now-lastT;velY=dt>0?(e.clientY-lastY)/dt*16:0;lastY=e.clientY;lastT=now;set(clamp(startOff+e.clientY-startY),false);}
+    function onUp(){if(!dragging)return;dragging=false;document.removeEventListener('mousemove',onMove);document.removeEventListener('mouseup',onUp);cancelAnimationFrame(rafId);rafId=requestAnimationFrame(momentum);}
+    document.addEventListener('mousemove',onMove);
+    document.addEventListener('mouseup',onUp);
+  });
+  outerEl.addEventListener('wheel',e=>{cancelAnimationFrame(rafId);set(idxToY(Math.max(0,Math.min(count-1,idx+(e.deltaY>0?1:-1)))),true);e.preventDefault();},{passive:false});
+  set(idxToY(idx),false);paint(idx);
+  return{getValue:()=>values[idx],setValue:(v)=>{const i=values.indexOf(v);if(i>=0)set(idxToY(i),true);}};
+}
+function initEditDrums(defW,defR){
+  drumWeightEdit=buildFullDrum(document.getElementById('drum-weight-edit-list'),document.getElementById('drum-weight-edit'),WEIGHTS_ALL,defW,'inp-weight-edit');
+  drumRepsEdit=buildFullDrum(document.getElementById('drum-reps-edit-list'),document.getElementById('drum-reps-edit'),REPS_ALL,defR,'inp-reps-edit');
+}
+
+// ═══════════════ EDIT SAVED SETS ═══════════════
+function openEditPanel(uid){
+  const s=sessions.find(x=>x.uid===uid);if(!s)return;
+  editingUid=uid;
+  document.getElementById('edit-title').textContent=s.exercise+' を編集';
+  document.getElementById('log-edit').style.display='block';
+  initEditDrums(s.w,s.r);
+  document.getElementById('inp-weight-edit').value=s.w;
+  document.getElementById('inp-reps-edit').value=s.r;
+  setTimeout(()=>document.getElementById('log-edit').scrollIntoView({behavior:'smooth',block:'nearest'}),60);
+}
+function saveEdit(){
+  if(!editingUid)return;
+  const s=sessions.find(x=>x.uid===editingUid);if(!s)return;
+  s.w=parseFloat(document.getElementById('inp-weight-edit').value);
+  s.r=parseInt(document.getElementById('inp-reps-edit').value);
+  s.rm1=+epley(s.w,s.r).toFixed(2);
+  saveStorage();closeEdit();recompute();
+  selectCalDay(calSelected,getSessionsByDate()[calSelected]||null);
+  toast('更新しました ✓');
+}
+function deleteByUid(uid){
+  if(!uid)return;
+  if(!confirm('このセットを削除しますか？'))return;
+  const s=sessions.find(x=>x.uid===uid);
+  const date=s?s.date:calSelected;
+  sessions=sessions.filter(x=>x.uid!==uid);
+  saveStorage();closeEdit();editingUid=null;recompute();
+  selectCalDay(date,getSessionsByDate()[date]||null);
+  toast('削除しました');
+}
+
+// ═══════════════ BULK EDIT (day sessions) ═══════════════
+function openBulkEdit(){
+  if(!calSelected)return;
+  const daySets=getSessionsByDate()[calSelected];
+  if(!daySets||!daySets.length){toast('この日の記録がありません');return;}
+  // copy sessions into step3Sets for editing
+  step3Sets=daySets.map(s=>({
+    uid:s.uid,ex:s.exercise,w:s.w,r:s.r,
+    rir:Math.max(0,Math.min(4,Math.round(10-s.rpe))),
+    rpe:s.rpe
+  }));
+  step3Mode='edit';
+  document.getElementById('bulk-edit-title').textContent=calSelected+' — 記録を編集';
+  document.getElementById('log-bulk-edit').style.display='block';
+  document.getElementById('log-step1').style.display='none';
+  document.getElementById('log-step2').style.display='none';
+  document.getElementById('log-step3').style.display='none';
+  renderBulkEdit();
+  setTimeout(()=>document.getElementById('log-bulk-edit').scrollIntoView({behavior:'smooth',block:'start'}),60);
+}
+function closeBulkEdit(){
+  document.getElementById('log-bulk-edit').style.display='none';
+  step3Sets=[];
+}
+function renderBulkEdit(){
+  const container=document.getElementById('bulk-edit-sets-list');
+  container.innerHTML='';
+  const isAdv=mode==='advanced';
+  const groups={};const order=[];
+  step3Sets.forEach(s=>{
+    if(!groups[s.ex]){groups[s.ex]=[];order.push(s.ex);}
+    groups[s.ex].push(s);
+  });
+  order.forEach(ex=>{
+    const col=exColor(ex);
+    const grp=document.createElement('div');grp.className='step3-group';
+    grp.innerHTML=`<div class="step3-ex-hd" style="color:${col}">${ex}</div>`;
+    groups[ex].forEach((set,i)=>{
+      const row=document.createElement('div');row.className='step3-set-row';
+      const effortHtml=isAdv
+        ?`<div class="step3-rpe-ctrl">
+             <button class="step3-adj" onclick="adjRpeBulk('${set.uid}',-0.5)">−</button>
+             <span class="step3-rpe-val" id="be-rpe-${set.uid}">${set.rpe.toFixed(1)}</span>
+             <button class="step3-adj" onclick="adjRpeBulk('${set.uid}',0.5)">＋</button>
+             <span class="step3-unit">RPE</span>
+           </div>`
+        :`<div class="step3-rir" id="be-rir-${set.uid}">
+             ${[0,1,2,3,4].map(v=>`<button class="step3-rir-btn${set.rir===v?' active':''}" data-uid="${set.uid}" data-rir="${v}" onclick="setRirBulk('${set.uid}',${v})">${v===0?'限':v===4?'4+':v}</button>`).join('')}
+           </div>`;
+      row.innerHTML=`
+        <div class="step3-num">${i+1}</div>
+        <div class="step3-ctrl">
+          <button class="step3-adj" onclick="adjWBulk('${set.uid}',-2.5)">−</button>
+          <span class="step3-val" id="be-w-${set.uid}">${set.w}</span>
+          <button class="step3-adj" onclick="adjWBulk('${set.uid}',2.5)">＋</button>
+          <span class="step3-unit">kg</span>
+        </div>
+        <div class="step3-x">×</div>
+        <div class="step3-ctrl">
+          <button class="step3-adj" onclick="adjRBulk('${set.uid}',-1)">−</button>
+          <span class="step3-val" id="be-r-${set.uid}">${set.r}</span>
+          <button class="step3-adj" onclick="adjRBulk('${set.uid}',1)">＋</button>
+          <span class="step3-unit">rep</span>
+        </div>
+        ${effortHtml}
+        <button onclick="deleteBulkSet('${set.uid}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:2px 4px;margin-left:2px;flex-shrink:0;">✕</button>`;
+      grp.appendChild(row);
+    });
+    container.appendChild(grp);
+  });
+}
+function adjWBulk(uid,d){
+  const s=step3Sets.find(x=>x.uid===uid);if(!s)return;
+  s.w=Math.max(10,Math.round((s.w+d)*10)/10);
+  const el=document.getElementById('be-w-'+uid);if(el)el.textContent=s.w;
+}
+function adjRBulk(uid,d){
+  const s=step3Sets.find(x=>x.uid===uid);if(!s)return;
+  s.r=Math.max(1,Math.min(30,s.r+d));
+  const el=document.getElementById('be-r-'+uid);if(el)el.textContent=s.r;
+}
+function adjRpeBulk(uid,d){
+  const s=step3Sets.find(x=>x.uid===uid);if(!s)return;
+  s.rpe=Math.max(5.0,Math.min(10.0,Math.round((s.rpe+d)*10)/10));
+  const el=document.getElementById('be-rpe-'+uid);if(el)el.textContent=s.rpe.toFixed(1);
+}
+function setRirBulk(uid,rir){
+  const s=step3Sets.find(x=>x.uid===uid);if(!s)return;
+  s.rir=rir;s.rpe=10-rir;
+  document.querySelectorAll(`.step3-rir-btn[data-uid="${uid}"]`).forEach(b=>b.classList.toggle('active',parseInt(b.dataset.rir)===rir));
+}
+function deleteBulkSet(uid){
+  step3Sets=step3Sets.filter(x=>x.uid!==uid);
+  renderBulkEdit();
+}
+function saveBulkEdit(){
+  // remove all sessions for this day and replace with edited step3Sets
+  const date=calSelected;
+  sessions=sessions.filter(s=>s.date!==date);
+  step3Sets.forEach(s=>{
+    const rpe=mode==='advanced'?s.rpe:(10-s.rir);
+    sessions.push({uid:s.uid,date,exercise:s.ex,w:s.w,r:s.r,rpe,rm1:+epley(s.w,s.r).toFixed(2)});
+  });
+  saveStorage();step3Sets=[];
+  closeBulkEdit();recompute();
+  selectCalDay(date,getSessionsByDate()[date]||null);
+  toast('変更を保存しました ✓');
+}
+
+// ═══════════════ CALENDAR ═══════════════
+function renderCalendar(){
+  const today=new Date().toISOString().slice(0,10);
+  const sessMap=getSessionsByDate();
+  const ml=['1月','2月','3月','4月','5月','6月','7月','8月','9月','10月','11月','12月'];
+  document.getElementById('cal-month-label').textContent=`${calYear}年 ${ml[calMonth]}`;
+  const cells=document.getElementById('cal-cells');cells.innerHTML='';
+  const first=new Date(calYear,calMonth,1).getDay();
+  const days=new Date(calYear,calMonth+1,0).getDate();
+  const prevDays=new Date(calYear,calMonth,0).getDate();
+  for(let i=0;i<first;i++){const c=document.createElement('div');c.className='cal-cell cal-empty';c.innerHTML=`<span class="cal-day" style="opacity:.2;">${prevDays-first+1+i}</span>`;cells.appendChild(c);}
+  for(let d=1;d<=days;d++){
+    const key=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isFut=new Date(calYear,calMonth,d)>new Date()&&key!==today;
+    const hasSess=!!sessMap[key];
+    const fss=hasSess?calcFss(sessMap[key]):0;
+    let cls='cal-cell';
+    if(key===today)cls+=' cal-today';if(key===calSelected)cls+=' cal-selected';
+    if(hasSess)cls+=' cal-has-session';if(fss>5500)cls+=' cal-high';if(isFut)cls+=' cal-future';
+    const c=document.createElement('div');c.className=cls;
+    c.innerHTML=`<span class="cal-day">${d}</span>`;
+    if(!isFut)c.onclick=()=>selectCalDay(key,sessMap[key]||null);
+    cells.appendChild(c);
+  }
+  const trail=(7-(first+days)%7)%7;
+  for(let i=1;i<=trail;i++){const c=document.createElement('div');c.className='cal-cell cal-empty';c.innerHTML=`<span class="cal-day" style="opacity:.2;">${i}</span>`;cells.appendChild(c);}
+  const ms=[];for(let d=1;d<=days;d++){const k=`${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;if(sessMap[k])ms.push(...sessMap[k]);}
+  document.getElementById('sum-sessions').textContent=[...new Set(ms.map(s=>s.date))].size;
+  document.getElementById('sum-sets').textContent=ms.length;
+  document.getElementById('sum-fss').textContent=(calcFss(ms)/1000).toFixed(1)+'k';
+}
+
+function selectCalDay(key,sets){
+  calSelected=key;renderCalendar();closeAll();closeEdit();
+  const d=new Date(key+'T00:00:00');
+  document.getElementById('cal-detail-date').textContent=
+    `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日（${'日月火水木金土'[d.getDay()]}）`;
+  document.getElementById('btn-open-log').style.display='block';
+  document.getElementById('btn-edit-day').style.display='none';
+  const body=document.getElementById('cal-detail-body');
+  const fssEl=document.getElementById('cal-detail-fss');
+  if(!sets||!sets.length){
+    body.innerHTML='<div class="cal-empty-msg">この日の記録はありません<br><span style="font-size:11px;color:var(--muted);">「＋ 追加」で記録できます</span></div>';
+    fssEl.textContent='';return;
+  }
+  document.getElementById('btn-edit-day').style.display='block';
+  fssEl.textContent='FSS '+calcFss(sets).toFixed(0);
+  const byEx={};for(const s of sets){if(!byEx[s.exercise])byEx[s.exercise]=[];byEx[s.exercise].push(s);}
+  const maxF=Math.max(...Object.values(byEx).map(ss=>calcFss(ss)));
+  let html='';
+  for(const[ex,ss]of Object.entries(byEx)){
+    const col=exColor(ex);const exF=calcFss(ss);
+    html+=`<div style="margin-bottom:14px;"><div style="display:flex;justify-content:space-between;margin-bottom:8px;"><div style="font-size:14px;color:${col};font-weight:500;">${ex}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:${col};">FSS ${exF.toFixed(0)}</div></div>`;
+    ss.forEach(s=>{
+      html+=`<div onclick="openEditPanel('${s.uid}')"
+        style="display:flex;justify-content:space-between;align-items:center;background:var(--bg3);border:1px solid var(--line);border-radius:6px;padding:9px 12px;margin-bottom:5px;cursor:pointer;"
+        onmouseover="this.style.borderColor='var(--warn)'" onmouseout="this.style.borderColor='var(--line)'">
+        <div>
+          <span style="font-family:'DM Mono',monospace;font-size:15px;color:var(--bright);">${s.w}kg × ${s.r}rep</span>
+          <span style="font-size:10px;color:var(--dim);margin-left:8px;">RPE ${s.rpe}</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span style="font-size:10px;color:var(--dim);">e1RM ${(s.rm1||epley(s.w,s.r)).toFixed(1)}kg</span>
+          <span>✏️</span>
+        </div>
+      </div>`;
+    });
+    html+=`<div class="cal-fss-bar"><div class="cal-fss-fill" style="width:${Math.min(100,exF/maxF*100).toFixed(0)}%;background:${col};opacity:.6;"></div></div></div>`;
+  }
+  body.innerHTML=html;
+}
+
+function calPrev(){calMonth--;if(calMonth<0){calMonth=11;calYear--;}calSelected=null;renderCalendar();resetCalDetail();}
+function calNext(){calMonth++;if(calMonth>11){calMonth=0;calYear++;}calSelected=null;renderCalendar();resetCalDetail();}
+function resetCalDetail(){
+  document.getElementById('cal-detail-date').textContent='日付を選択してください';
+  document.getElementById('cal-detail-fss').textContent='';
+  document.getElementById('btn-open-log').style.display='none';
+  document.getElementById('btn-edit-day').style.display='none';
+  document.getElementById('cal-detail-body').innerHTML='<div class="cal-empty-msg">日付をタップすると記録が表示されます</div>';
+  closeAll();closeEdit();
+}
+
+// ═══════════════ TODAY LOG SHORTCUT ═══════════════
+function goToTodayLog(){
+  const today=new Date().toISOString().slice(0,10);
+  // switch to calendar tab
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-calendar').classList.add('active');
+  document.querySelector('.nav-btn[onclick*="calendar"]').classList.add('active');
+  // navigate calendar to current month
+  calYear=new Date().getFullYear();calMonth=new Date().getMonth();
+  renderCalendar();
+  // select today and open log
+  const sessMap=getSessionsByDate();
+  selectCalDay(today,sessMap[today]||null);
+  openStep1();
+  setTimeout(()=>document.getElementById('log-step1').scrollIntoView({behavior:'smooth',block:'start'}),120);
+}
+
+// ═══════════════ HP/SP TODAY CHART ═══════════════
+function renderHspTodayChart(){
+  if(!timeline.length)return;
+  const gc='rgba(255,255,255,0.04)',labels=timeline.map(r=>r.date.slice(5));
+  const si=timeline.findIndex(r=>r.future);
+  function seg(col){return{borderColor:ctx=>ctx.p1DataIndex>=si&&si>=0?col+'55':col,borderDash:ctx=>ctx.p1DataIndex>=si&&si>=0?[4,3]:[]};}
+  function maxDots(data,col){
+    const mx=Math.max(...data),pts=data.map(v=>v===mx?v:null);
+    return{data:pts,borderColor:col,backgroundColor:col,pointRadius:pts.map(v=>v!=null?5:0),pointHoverRadius:7,borderWidth:0,showLine:false,fill:false,label:''};
+  }
+  const hpD=timeline.map(r=>+r.hp.toFixed(1));
+  const spD=timeline.map(r=>+r.sp.toFixed(1));
+  const fD= timeline.map(r=>+r.fat.toFixed(1));
+  if(charts.thsp)charts.thsp.destroy();
+  charts.thsp=new Chart(document.getElementById('c-today-hsp'),{type:'line',data:{labels,datasets:[
+    {label:'HP適応',data:hpD,borderColor:'#3dd6a3',borderWidth:1.5,pointRadius:0,tension:.3,fill:false,segment:seg('#3dd6a3')},
+    {label:'SP適応',data:spD,borderColor:'#a78bfa',borderWidth:1.5,pointRadius:0,tension:.3,fill:false,segment:seg('#a78bfa')},
+    {label:'疲労',  data:fD, borderColor:'#f06b6b',borderWidth:1.5,pointRadius:0,tension:.3,fill:false,segment:seg('#f06b6b')},
+    maxDots(hpD,'#3dd6a3'),maxDots(spD,'#a78bfa'),maxDots(fD,'#f06b6b'),
+  ]},options:{responsive:true,maintainAspectRatio:false,
+    plugins:{
+      legend:{display:true,position:'top',labels:{boxWidth:8,padding:10,font:{size:9},color:'#6b7494',filter:i=>i.text!==''}},
+      tooltip:{backgroundColor:'#0e1118',borderColor:'#1f2535',borderWidth:1,mode:'index',
+        callbacks:{title:c=>c[0].label+(timeline[c[0].dataIndex]?.future?' [予測]':''),
+          label:c=>c.dataset.label?`${c.dataset.label}: ${c.parsed.y.toFixed(1)}`:null,
+          filter:item=>!!item.dataset.label}},
+    },
+    scales:{x:{grid:{color:gc},ticks:{color:'#3a4260',maxRotation:45,font:{size:8},callback:(v,i)=>{const d=labels[i];return d&&i%7===0?d:''}}},
+            y:{grid:{color:gc},ticks:{color:'#3a4260'}}}}});
+}
+
+// ═══════════════ VERTICAL LINES PLUGIN (TODAY + PEAKS) ═══════════════
+const todayLinePlugin={
+  id:'todayLine',
+  afterDraw(chart){
+    const labels=chart.data.labels;
+    if(!labels||!labels.length)return;
+    const today=new Date().toISOString().slice(5,10);
+    const pk=window._peakDates||{};
+    const meta=chart.getDatasetMeta(0);
+    if(!meta||!meta.data||!meta.data.length)return;
+    const{top,bottom}=chart.chartArea;
+    const ctx=chart.ctx;
+
+    const lineDefs=[
+      {date:today,       color:'rgba(61,214,163,0.65)', dash:[4,3],label:'TODAY',tc:'rgba(61,214,163,1)'},
+      {date:pk.bench,    color:'rgba(255,107,122,0.5)', dash:[3,3],label:'B',    tc:'rgba(255,107,122,0.9)'},
+      {date:pk.squat,    color:'rgba(255,201,74,0.5)',  dash:[3,3],label:'S',    tc:'rgba(255,201,74,0.9)'},
+      {date:pk.dead,     color:'rgba(77,200,232,0.5)',  dash:[3,3],label:'D',    tc:'rgba(77,200,232,0.9)'},
+    ].filter(l=>l.date);
+
+    // group by rounded x to handle overlap
+    const byX={};
+    lineDefs.forEach(l=>{
+      const idx=labels.indexOf(l.date);if(idx<0)return;
+      const pt=meta.data[idx];if(!pt)return;
+      const xk=String(Math.round(pt.x));
+      if(!byX[xk])byX[xk]=[];
+      byX[xk].push({...l,x:pt.x});
+    });
+
+    ctx.save();
+    ctx.font="600 8px 'DM Mono',monospace";
+    Object.values(byX).forEach(group=>{
+      // draw all lines at same x
+      group.forEach(l=>{
+        ctx.beginPath();ctx.moveTo(l.x,top);ctx.lineTo(l.x,bottom);
+        ctx.strokeStyle=l.color;ctx.lineWidth=1.5;ctx.setLineDash(l.dash);ctx.stroke();
+        ctx.setLineDash([]);
+      });
+      // labels: stack vertically above chart area
+      group.forEach((l,gi)=>{
+        const labelY=top-4-(gi*10);
+        ctx.fillStyle=l.tc;ctx.textAlign='center';
+        ctx.fillText(l.label,l.x,labelY<5?5:labelY);
+      });
+    });
+    ctx.restore();
+  }
+};
+Chart.register(todayLinePlugin);
+Chart.defaults.color='#3a4260';
+Chart.defaults.font.family="'DM Mono',monospace";
+Chart.defaults.font.size=9;
+loadStorage();
+buildExPicker();
+setMode(mode);
+recompute();
+renderCalendar();
+</script>
+
+<!-- PWA Service Worker 無効化（更新の確実性優先） -->
+
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+  });
+}
+</script>
+
+<script>
+// ── デモデータ注入: Powerbuilder（中級） ──
+(function(){
+  var SK = 'adapt4_s_powerbuilder';
+  var CK = 'adapt4_cfg_powerbuilder';
+  var injS = [{"uid": "p001", "date": "2019-06-12", "exercise": "デッドリフト", "sets": [{"w": 148, "r": 6, "rpe": 8.0}], "rm1": 182, "note": ""}, {"uid": "p002", "date": "2019-06-12", "exercise": "デッドリフト", "sets": [{"w": 148, "r": 6, "rpe": 8.0}], "rm1": 182, "note": ""}, {"uid": "p003", "date": "2019-06-12", "exercise": "ベンチプレス", "sets": [{"w": 107, "r": 8, "rpe": 8.0}], "rm1": 128, "note": ""}, {"uid": "p004", "date": "2019-06-12", "exercise": "ベンチプレス", "sets": [{"w": 107, "r": 8, "rpe": 8.0}], "rm1": 128, "note": ""}, {"uid": "p005", "date": "2019-06-12", "exercise": "ベンチプレス", "sets": [{"w": 107, "r": 8, "rpe": 9.0}], "rm1": 128, "note": ""}, {"uid": "p006", "date": "2019-06-12", "exercise": "バーベルベントオーバーロー", "sets": [{"w": 84, "r": 10, "rpe": 8.0}], "rm1": 110, "note": ""}, {"uid": "p007", "date": "2019-06-15", "exercise": "スクワット", "sets": [{"w": 111, "r": 6, "rpe": 7.0}], "rm1": 148, "note": ""}, {"uid": "p008", "date": "2019-06-15", "exercise": "スクワット", "sets": [{"w": 118, "r": 6, "rpe": 8.0}], "rm1": 148, "note": ""}, {"uid": "p009", "date": "2019-06-15", "exercise": "スクワット", "sets": [{"w": 118, "r": 6, "rpe": 8.5}], "rm1": 148, "note": ""}, {"uid": "p010", "date": "2019-06-16", "exercise": "ベンチプレス", "sets": [{"w": 111, "r": 5, "rpe": 8.0}], "rm1": 128, "note": ""}, {"uid": "p011", "date": "2019-06-16", "exercise": "ベンチプレス", "sets": [{"w": 111, "r": 5, "rpe": 8.0}], "rm1": 128, "note": ""}, {"uid": "p012", "date": "2019-06-16", "exercise": "ベンチプレス", "sets": [{"w": 111, "r": 5, "rpe": 8.0}], "rm1": 128, "note": ""}, {"uid": "p013", "date": "2019-06-19", "exercise": "スクワット", "sets": [{"w": 120, "r": 6, "rpe": 8.0}], "rm1": 148, "note": ""}, {"uid": "p014", "date": "2019-06-19", "exercise": "スクワット", "sets": [{"w": 120, "r": 6, "rpe": 8.0}], "rm1": 148, "note": ""}, {"uid": "p015", "date": "2019-06-19", "exercise": "スクワット", "sets": [{"w": 120, "r": 6, "rpe": 8.0}], "rm1": 148, "note": ""}, {"uid": "p016", "date": "2019-06-20", "exercise": "ベンチプレス", "sets": [{"w": 107, "r": 8, "rpe": 8.0}], "rm1": 128, "note": ""}, {"uid": "p017", "date": "2019-06-20", "exercise": "ベンチプレス", "sets": [{"w": 107, "r": 8, "rpe": 8.0}], "rm1": 128, "note": ""}, {"uid": "p018", "date": "2019-06-20", "exercise": "ベンチプレス", "sets": [{"w": 107, "r": 8, "rpe": 9.0}], "rm1": 128, "note": ""}, {"uid": "p019", "date": "2019-06-20", "exercise": "デッドリフト", "sets": [{"w": 145, "r": 6, "rpe": 8.0}], "rm1": 182, "note": ""}, {"uid": "p020", "date": "2019-06-20", "exercise": "デッドリフト", "sets": [{"w": 145, "r": 6, "rpe": 8.0}], "rm1": 182, "note": ""}, {"uid": "p021", "date": "2019-06-20", "exercise": "デッドリフト", "sets": [{"w": 145, "r": 6, "rpe": 8.5}], "rm1": 182, "note": ""}, {"uid": "p022", "date": "2019-06-26", "exercise": "スクワット", "sets": [{"w": 122, "r": 6, "rpe": 8.0}], "rm1": 148, "note": ""}, {"uid": "p023", "date": "2019-06-26", "exercise": "スクワット", "sets": [{"w": 122, "r": 6, "rpe": 8.0}], "rm1": 148, "note": ""}, {"uid": "p024", "date": "2019-06-26", "exercise": "スクワット", "sets": [{"w": 122, "r": 6, "rpe": 8.5}], "rm1": 148, "note": ""}, {"uid": "p025", "date": "2019-06-27", "exercise": "ベンチプレス", "sets": [{"w": 111, "r": 5, "rpe": 8.0}], "rm1": 128, "note": ""}, {"uid": "p026", "date": "2019-06-27", "exercise": "ベンチプレス", "sets": [{"w": 118, "r": 5, "rpe": 9.0}], "rm1": 128, "note": ""}, {"uid": "p027", "date": "2019-06-27", "exercise": "ベンチプレス", "sets": [{"w": 116, "r": 5, "rpe": 8.0}], "rm1": 128, "note": ""}, {"uid": "p028", "date": "2019-06-27", "exercise": "ベンチプレス", "sets": [{"w": 116, "r": 5, "rpe": 8.0}], "rm1": 128, "note": ""}];
+  var injC = {"bw": 80, "gender": "male", "base_bench": 128, "base_squat": 148, "base_dead": 182};
+  // 常に注入（このファイル専用のキーなので上書きOK）
+  localStorage.setItem(SK, JSON.stringify(injS));
+  localStorage.setItem(CK, JSON.stringify(injC));
+})();
+</script>
+
+</body>
+</html>
