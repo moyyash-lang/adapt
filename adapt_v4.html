@@ -175,6 +175,17 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
 .hist-item{background:var(--bg3);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:8px;}
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--bg4);border:1px solid var(--acc2);border-radius:20px;padding:10px 20px;font-size:12px;color:var(--acc2);font-family:'DM Mono',monospace;transition:transform .3s;z-index:999;white-space:nowrap;}
 .toast.show{transform:translateX(-50%) translateY(0);}
+/* FI state colors */
+.fi-state-text{font-size:10px;letter-spacing:1px;margin-top:3px;}
+/* HP/SP ratio bar */
+.hpsp-ratio-wrap{margin-bottom:12px;}
+.hpsp-ratio-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:6px;display:flex;justify-content:space-between;align-items:center;}
+.hpsp-ratio-bar{height:8px;border-radius:4px;overflow:hidden;background:var(--bg4);display:flex;}
+.hpsp-ratio-hp{background:var(--hp);transition:width .4s;}
+.hpsp-ratio-sp{background:var(--sp);transition:width .4s;}
+.hpsp-ratio-nums{display:flex;justify-content:space-between;margin-top:4px;}
+.hpsp-ratio-nums span{font-family:'DM Mono',monospace;font-size:10px;}
+
 </style>
 </head>
 <body>
@@ -200,9 +211,14 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
   <div class="status-grid">
     <div class="stat-card"><div class="stat-val" id="s-hp" style="color:var(--hp)">—</div><div class="stat-label">HP LEVEL</div><div class="stat-bar"><div class="stat-fill" id="s-hp-bar" style="background:var(--hp);width:0%"></div></div></div>
     <div class="stat-card"><div class="stat-val" id="s-sp" style="color:var(--sp)">—</div><div class="stat-label">SP LEVEL</div><div class="stat-bar"><div class="stat-fill" id="s-sp-bar" style="background:var(--sp);width:0%"></div></div></div>
-    <div class="stat-card"><div class="stat-val" id="s-fat" style="color:var(--fat)">—</div><div class="stat-label">疲労</div><div class="stat-bar"><div class="stat-fill" id="s-fat-bar" style="background:var(--fat);width:0%"></div></div></div>
+    <div class="stat-card"><div class="stat-val" id="s-fat" style="color:var(--fat)">—</div><div class="stat-label">FATIGUE INDEX</div><div class="fi-state-text" id="s-fi-state" style="color:var(--dim)">—</div><div class="stat-bar"><div class="stat-fill" id="s-fat-bar" style="background:var(--fat);width:0%"></div></div></div>
   </div>
   <div class="advice-box"><div class="advice-label">TODAY'S ADVICE</div><div class="advice-text" id="advice-text">データがありません</div><div class="advice-sub" id="advice-sub">まずトレーニングを記録してください</div></div>
+  <div class="card" style="padding:14px 16px 12px;">
+    <div class="hpsp-ratio-label"><span>HP / SP スコア比率</span><span id="today-hpsp-total" style="color:var(--dim)"></span></div>
+    <div class="hpsp-ratio-bar"><div class="hpsp-ratio-hp" id="today-hp-bar" style="width:50%"></div><div class="hpsp-ratio-sp" id="today-sp-bar" style="width:50%"></div></div>
+    <div class="hpsp-ratio-nums"><span style="color:var(--hp)" id="today-hp-pct">HP —%</span><span style="color:var(--sp)" id="today-sp-pct">SP —%</span></div>
+  </div>
   <button onclick="goToTodayLog()" style="width:100%;margin-bottom:14px;padding:14px;background:transparent;border:1.5px solid var(--acc2);border-radius:var(--r);color:var(--acc2);font-family:'DM Mono',monospace;font-size:13px;letter-spacing:2px;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(61,214,163,0.08)'" onmouseout="this.style.background='transparent'">
     ＋ 本日のトレーニングを記録
   </button>
@@ -292,6 +308,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
         <div style="height:6px;background:var(--bg4);border-radius:3px;overflow:hidden;">
           <div id="session-budget-bar" style="height:100%;width:0%;background:var(--acc2);border-radius:3px;transition:width .3s,background .3s;"></div>
         </div>
+        <!-- HP/SP ratio for this session -->
+        <div style="margin-top:8px;" id="step2-hpsp-wrap">
+          <div class="hpsp-ratio-label"><span>このセッションのHP/SP</span></div>
+          <div class="hpsp-ratio-bar"><div class="hpsp-ratio-hp" id="step2-hp-bar" style="width:50%"></div><div class="hpsp-ratio-sp" id="step2-sp-bar" style="width:50%"></div></div>
+          <div class="hpsp-ratio-nums"><span style="color:var(--hp)" id="step2-hp-pct">HP —%</span><span style="color:var(--sp)" id="step2-sp-pct">SP —%</span></div>
+        </div>
         <div id="weekly-volume-panel" style="margin-top:10px;display:none;"></div>
       </div>
       <div id="ex-cards-list"></div>
@@ -312,6 +334,12 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div style="padding:16px;">
       <div style="font-size:11px;color:var(--dim);margin-bottom:12px;">各セットの重量・回数・RIR（あと何回できるか）を調整してください</div>
       <div id="step3-sets-list"></div>
+      <!-- HP/SP ratio confirm -->
+      <div style="margin:10px 0 8px;" id="step3-hpsp-wrap">
+        <div class="hpsp-ratio-label"><span>このセッションのHP/SP</span></div>
+        <div class="hpsp-ratio-bar"><div class="hpsp-ratio-hp" id="step3-hp-bar" style="width:50%"></div><div class="hpsp-ratio-sp" id="step3-sp-bar" style="width:50%"></div></div>
+        <div class="hpsp-ratio-nums"><span style="color:var(--hp)" id="step3-hp-pct">HP —%</span><span style="color:var(--sp)" id="step3-sp-pct">SP —%</span></div>
+      </div>
       <button class="btn-primary btn-green" onclick="saveSession()" style="margin-top:8px;">✓ 保存する</button>
     </div>
   </div>
@@ -400,7 +428,7 @@ body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;fon
     <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:4px;">
       <div class="setting-label">トレーニングレベル <span style="color:var(--dim);font-weight:400;">（DOTS自動判定）</span></div>
       <div id="auto-level-display" style="font-size:12px;color:var(--acc2);"></div>
-      <div style="font-size:11px;color:var(--dim);">DOTS &lt;220 → 初心者 ／ 220〜400 → 中級者 ／ 400〜 → 上級者（体重・性別正規化）</div>
+      <div style="font-size:11px;color:var(--dim);">DOTS &lt;300 → 初心者 ／ 300〜460 → 中級者 ／ 460〜 → 上級者（体重・性別正規化）</div>
     </div>
     <div class="setting-row"><div><div class="setting-label">入力モード</div><div class="setting-sub">かんたん=RIR / 上級者=RPE</div></div>
       <div class="toggle-wrap"><button class="toggle-opt on" id="tog-beginner" onclick="setMode('beginner')">かんたん</button><button class="toggle-opt" id="tog-advanced" onclick="setMode('advanced')">上級者</button></div>
@@ -765,13 +793,49 @@ function updateToday(){
   const BASE={bench:settings.base_bench,squat:settings.base_squat,dead:settings.base_dead};
   document.getElementById('s-hp').textContent=row.hp.toFixed(0);
   document.getElementById('s-sp').textContent=row.sp.toFixed(0);
-  document.getElementById('s-fat').textContent=row.fat.toFixed(0);
+  // Fatigue Index
+  const fi=computeFI();
+  const fiEl=document.getElementById('s-fat');
+  const fiStateEl=document.getElementById('s-fi-state');
+  const fiBarEl=document.getElementById('s-fat-bar');
+  if(fi===null){
+    fiEl.textContent='—'; fiStateEl.textContent='データ不足';
+    fiEl.style.color='var(--dim)'; fiBarEl.style.width='0%';
+  } else {
+    fiEl.textContent=fi.toFixed(2);
+    let fiCol, fiState;
+    if(fi<0.8){fiCol='var(--acc2)';fiState='軽い';}
+    else if(fi<1.0){fiCol='var(--acc2)';fiState='適正';}
+    else if(fi<1.2){fiCol='#ffd93d';fiState='高負荷';}
+    else{fiCol='var(--fat)';fiState='デロード推奨';}
+    fiEl.style.color=fiCol;
+    fiStateEl.textContent=fiState;
+    fiStateEl.style.color=fiCol;
+    fiBarEl.style.background=fiCol;
+    fiBarEl.style.width=Math.min(100,fi/1.6*100)+'%';
+  }
   document.getElementById('s-hp-bar').style.width=Math.min(100,row.hp/20*100)+'%';
   document.getElementById('s-sp-bar').style.width=Math.min(100,row.sp/15*100)+'%';
-  document.getElementById('s-fat-bar').style.width=Math.min(100,row.fat/10*100)+'%';
+  // TODAY HP/SP ratio (今日のセッション → なければ今週)
+  const todaySets=sessions.filter(s=>s.date===today);
+  const weekAgo=new Date(new Date()-7*864e5).toISOString().slice(0,10);
+  const weekSets=sessions.filter(s=>s.date>=weekAgo);
+  if(todaySets.length){
+    renderHpSpRatio('today', todaySets);
+    const fss=calcFss(todaySets);
+    document.getElementById('today-hpsp-total').textContent='今日 FSS '+fss.toFixed(0);
+  } else if(weekSets.length){
+    renderHpSpRatio('today', weekSets);
+    document.getElementById('today-hpsp-total').textContent='今週';
+  } else {
+    renderHpSpRatio('today', []);
+    document.getElementById('today-hpsp-total').textContent='データなし';
+  }
   const fr=row.fat/(row.hp+row.sp+.01);
   let adv,sub;
-  if(fr>.6){adv='今日は休養日推奨';sub='疲労が高め。軽めの有酸素か完全休養を。';}
+  if(fi!==null && fi>=1.2){adv='デロード推奨';sub='疲労指数が高い（FI≥1.2）。軽めの有酸素か完全休養を。';}
+  else if(fi!==null && fi>=1.0){adv='高負荷状態です';sub='疲労が蓄積気味（FI≥1.0）。強度を少し落とすか休養も検討。';}
+  else if(fr>.6){adv='今日は休養日推奨';sub='疲労が高め。軽めの有酸素か完全休養を。';}
   else if(row.sp<row.hp*.3){adv='中強度でボリュームを稼ぐ日';sub='HP優位。8〜12rep帯で追い込む。';}
   else{adv='トレーニング日和です';sub='HP・SP ともにバランス良好。目的に合った強度で。';}
   document.getElementById('advice-text').textContent=adv;
@@ -982,6 +1046,60 @@ function calcFss(sets){
   }
   return t;
 }
+
+// Fatigue Index = 7日平均FSS / 28日平均FSS (ACWR準拠)
+function computeFI(){
+  if(!sessions.length) return null;
+  const today=new Date(); today.setHours(23,59,59,999);
+  const d7=new Date(today-7*864e5), d28=new Date(today-28*864e5);
+  const byDate={};
+  for(const s of sessions){
+    if(!byDate[s.date]) byDate[s.date]=[];
+    byDate[s.date].push(s);
+  }
+  let sum7=0, sum28=0;
+  for(const [ds,sets] of Object.entries(byDate)){
+    const d=new Date(ds);
+    const fss=calcFss(sets);
+    if(d>=d7 && d<=today) sum7+=fss;
+    if(d>=d28 && d<=today) sum28+=fss;
+  }
+  const avg28=sum28/28, avg7=sum7/7;
+  if(avg28<1) return null;
+  return avg7/avg28;
+}
+
+// セッションセット配列からHP/SP比率を返す {hp:0-100, sp:0-100}
+function calcHpSpRatio(sets){
+  let totHp=0, totSp=0;
+  for(const s of sets){
+    const loadW=isDumbbell(s.exercise)?s.w*2:s.w;
+    const rm1=s.rm1||epley(loadW,s.r);
+    const I=loadW/rm1, V=loadW*s.r, Rec=recruit(I), S=V*Rec;
+    totHp+=S*hpFactor(I);
+    totSp+=S*spFactor(I);
+  }
+  const total=totHp+totSp;
+  if(total<1) return null;
+  return {hp:totHp/total*100, sp:totSp/total*100};
+}
+
+// HP/SP ratio barをIDプレフィックスで更新
+function renderHpSpRatio(prefix, sets){
+  const ratio=calcHpSpRatio(sets);
+  if(!ratio){
+    document.getElementById(prefix+'-hp-bar').style.width='50%';
+    document.getElementById(prefix+'-sp-bar').style.width='50%';
+    document.getElementById(prefix+'-hp-pct').textContent='HP —%';
+    document.getElementById(prefix+'-sp-pct').textContent='SP —%';
+    return;
+  }
+  document.getElementById(prefix+'-hp-bar').style.width=ratio.hp.toFixed(0)+'%';
+  document.getElementById(prefix+'-sp-bar').style.width=ratio.sp.toFixed(0)+'%';
+  document.getElementById(prefix+'-hp-pct').textContent='HP '+ratio.hp.toFixed(0)+'%';
+  document.getElementById(prefix+'-sp-pct').textContent='SP '+ratio.sp.toFixed(0)+'%';
+}
+
 function exColor(ex){
   const cat=EX_CAT[ex]||'OTHER';
   if(cat==='PUSH')return 'var(--bench)';
@@ -1103,10 +1221,11 @@ function getDotsScore(){
 function getAutoLevel(){
   const dots=+getDotsScore();
   // DOTS閾値: 体重・性別正規化 出典: Rhea 2003 / Junghanns 2020
-  // 男性80kgの場合 → 220≒BIG3 211kg / 400≒BIG3 384kg
-  // 女性60kgの場合 → 220≒BIG3 137kg / 400≒BIG3 249kg
-  if(dots<220) return 'beginner';
-  if(dots<400) return 'intermediate';
+  // 男性80kgの場合 → 300≒BIG3 288kg / 460≒BIG3 442kg
+  // 女性60kgの場合 → 300≒BIG3 188kg / 460≒BIG3 287kg
+  // 検証: Brad(87kg,293kg)=DOTS298→初心者✅ / Powerbuilder(80kg,458kg)=DOTS478→中級→実態中級✅
+  if(dots<300) return 'beginner';
+  if(dots<460) return 'intermediate';
   return 'advanced';
 }
 function getLvAdj(category='push_iso'){
@@ -1610,6 +1729,7 @@ function buildExCards(){
     const statusText=rawRatio>1.2?'💀 大幅超過':rawRatio>0.9?'⚠️ 過負荷':rawRatio>0.6?'🔶 やや高め':rawRatio>0.35?'🟡 適切':'⚡ 余裕あり';
     budgetLabelEl.textContent=`セッション負荷 ${budgetUsedPct.toFixed(0)}%${overStr}  ${statusText}（開始疲労: ${globalFl.icon}${globalFl.label}）`;
   }
+  // Step2 HP/SP ratioはドラム生成後にupdateCardMetricsで更新する
 
   // 週ボリュームパネル描画（projected = 提案セット数込み）
   // カード生成後にdrumMapが確定してからprojectedを計算
@@ -1813,6 +1933,18 @@ function updateCardMetrics(idx){
 
   // ── 週ボリュームパネル（上部）更新 ──
   updateWeeklyVolumePanel(projWeek);
+
+  // ── Step2 HP/SP ratio (ドラム確定値から計算) ──
+  {
+    const allSets=[];
+    selectedExercises.forEach(ex2=>{
+      const dm=exDrumMap[ex2]; if(!dm) return;
+      const lw=dm.isDB?dm.w.getValue()*2:dm.w.getValue();
+      const r=dm.r.getValue(), s=dm.s.getValue();
+      for(let i=0;i<s;i++) allSets.push({exercise:ex2,w:lw,r,rm1:null,rpe:8});
+    });
+    renderHpSpRatio('step2', allSets);
+  }
 }
 
 function updateWeeklyVolumePanel(projWeekOverride){
@@ -1959,6 +2091,8 @@ function renderStep3(){
     });
     container.appendChild(grp);
   });
+  // Step3 HP/SP ratio
+  renderHpSpRatio('step3', step3Sets.map(s=>({exercise:s.ex,w:s.w,r:s.r,rm1:null,rpe:s.rpe||8})));
 }
 
 function adjW(uid,delta){
